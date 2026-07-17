@@ -38,7 +38,7 @@ button { font: inherit; }
   min-height: 100vh;
   min-height: 100dvh;
   margin: 0 auto;
-  padding: max(24px, env(safe-area-inset-top)) 20px calc(168px + var(--safe-bottom));
+  padding: max(24px, env(safe-area-inset-top)) 20px calc(132px + var(--safe-bottom));
 }
 
 .app-header,
@@ -218,11 +218,6 @@ h2 { margin-bottom: 0; font-size: 1.65rem; letter-spacing: -0.04em; }
 
 .generate-button:active { transform: scale(0.985); }
 .generate-button:disabled { cursor: wait; filter: grayscale(0.7); opacity: 0.48; }
-
-.install-help { margin-top: 9px; color: var(--muted); font-size: 0.72rem; text-align: center; }
-.install-help summary { cursor: pointer; list-style: none; }
-.install-help summary::-webkit-details-marker { display: none; }
-.install-help p { margin: 8px auto 0; max-width: 420px; line-height: 1.5; }
 
 .visually-hidden {
   position: absolute;
