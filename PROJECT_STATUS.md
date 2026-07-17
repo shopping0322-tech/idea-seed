@@ -1,7 +1,7 @@
 # プロジェクト進行状況
 
 - 最終更新: 2026-07-18
-- 現在の状態: iPhone向けPWA MVP実装・ローカル検証完了
+- 現在の状態: iPhone向けPWA MVP実装・各カテゴリ1万件データ検証完了
 - 現在の主ルート: GitHub Pagesで配信するPWA
 - 保留ルート: SwiftUIネイティブ版のXcodeビルド検証
 
@@ -59,7 +59,8 @@
 - `who.json`
 - `action.json`
 - `manifest.json`
-- 初期データは各カテゴリ10件
+- 初期データは各カテゴリ1万件
+- データ生成用スクリプト `Scripts/generate_seed_data.mjs` を実装
 - データ検証・manifest更新用スクリプトを実装
 
 ### ネイティブ版
@@ -78,6 +79,7 @@
 - ブラウザスモークテスト: 成功
 - 生成ボタンによる4カテゴリ抽選: 成功
 - 履歴1件保存: 成功
+- 各カテゴリ1万件・重複なし・「の」なし検証: 成功
 
 ## 未完了・保留
 
@@ -101,6 +103,12 @@
 ## データ更新手順
 
 カテゴリJSONを編集後、カテゴリの`version`と全体の`dataVersion`を上げる。
+
+同じ方針で4カテゴリを再生成する場合:
+
+```sh
+node Scripts/generate_seed_data.mjs
+```
 
 ```sh
 python3 Scripts/data_manifest.py --update

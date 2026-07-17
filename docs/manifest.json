@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "dataVersion": "2026.07.18.1",
+  "dataVersion": "2026.07.18.3",
   "categories": [
     {
       "id": "when",
       "label": "いつ",
       "order": 1,
-      "version": 2,
+      "version": 4,
       "files": [
         {
           "path": "when.json",
-          "sha256": "e6625f9f4097066f5deef22cde724d7fde24b5f2d98852123a6462f62d7af047",
-          "count": 100
+          "sha256": "748a225247379d0106581f120678112fc4cbee60f3334043d700f64f229d45f3",
+          "count": 10000
         }
       ]
     },
@@ -19,12 +19,12 @@
       "id": "where",
       "label": "どこで",
       "order": 2,
-      "version": 2,
+      "version": 4,
       "files": [
         {
           "path": "where.json",
-          "sha256": "0ff27a319c7d2da2cb77710b5327afdcc0573e6d6f06edca6ce9dfb7e9277e25",
-          "count": 100
+          "sha256": "9277aa6dd7ef2324d2079f4c97ebfeb1eb46e6b701fdcbdec0243a1c5e9ac52a",
+          "count": 10000
         }
       ]
     },
@@ -32,12 +32,12 @@
       "id": "who",
       "label": "誰が",
       "order": 3,
-      "version": 2,
+      "version": 4,
       "files": [
         {
           "path": "who.json",
-          "sha256": "436e30fee1f1c73fe70fb20c3693d81ac8e348b7a5f596f992880f06d8400178",
-          "count": 100
+          "sha256": "606f584060ee35d2434ca7106d181ead37cf6dd8a405ddab195a7d414699a72b",
+          "count": 10000
         }
       ]
     },
@@ -45,12 +45,12 @@
       "id": "action",
       "label": "何をした",
       "order": 4,
-      "version": 2,
+      "version": 4,
       "files": [
         {
           "path": "action.json",
-          "sha256": "a3590accf697fe9daf67644deef578b7685db60801242a569dc1a03a7fe17f03",
-          "count": 100
+          "sha256": "be5bef917d5c43f06e8213bf67d418f4550328241bed08b3d450ed525589f9ac",
+          "count": 10000
         }
       ]
     }
