@@ -67,17 +67,27 @@ function createClient(webSocketUrl) {
 }
 
 async function evaluate(client, expression) {
-  const result = await client.send("Runtime.evaluate", {
-    expression,
-    awaitPromise: true,
-    returnByValue: true,
-  });
+  let lastError;
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    try {
+      const result = await client.send("Runtime.evaluate", {
+        expression,
+        awaitPromise: true,
+        returnByValue: true,
+      });
 
-  if (result.exceptionDetails) {
-    throw new Error(result.exceptionDetails.text);
+      if (result.exceptionDetails) {
+        throw new Error(result.exceptionDetails.text);
+      }
+
+      return result.result.value;
+    } catch (error) {
+      lastError = error;
+      if (!String(error.message).includes("Execution context was destroyed")) throw error;
+      await delay(250);
+    }
   }
-
-  return result.result.value;
+  throw lastError;
 }
 
 async function main() {
