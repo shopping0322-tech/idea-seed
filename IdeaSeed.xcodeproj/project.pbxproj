@@ -1,0 +1,295 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A10000000000000000000001 /* IdeaSeedApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000001 /* IdeaSeedApp.swift */; };
+		A10000000000000000000002 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* AppModel.swift */; };
+		A10000000000000000000003 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000003 /* RootView.swift */; };
+		A10000000000000000000004 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* Models.swift */; };
+		A10000000000000000000005 /* SHA256Digest.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000005 /* SHA256Digest.swift */; };
+		A10000000000000000000006 /* IdeaSeedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000006 /* IdeaSeedStore.swift */; };
+		A10000000000000000000007 /* DataUpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000007 /* DataUpdateService.swift */; };
+		A10000000000000000000008 /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000008 /* manifest.json */; };
+		A10000000000000000000009 /* when.json in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000009 /* when.json */; };
+		A1000000000000000000000A /* where.json in Resources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000A /* where.json */; };
+		A1000000000000000000000B /* who.json in Resources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000B /* who.json */; };
+		A1000000000000000000000C /* action.json in Resources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000C /* action.json */; };
+		A1000000000000000000000D /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000E /* libsqlite3.tbd */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A20000000000000000000001 /* IdeaSeedApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdeaSeedApp.swift; sourceTree = "<group>"; };
+		A20000000000000000000002 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		A20000000000000000000003 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		A20000000000000000000004 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		A20000000000000000000005 /* SHA256Digest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SHA256Digest.swift; sourceTree = "<group>"; };
+		A20000000000000000000006 /* IdeaSeedStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdeaSeedStore.swift; sourceTree = "<group>"; };
+		A20000000000000000000007 /* DataUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataUpdateService.swift; sourceTree = "<group>"; };
+		A20000000000000000000008 /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = manifest.json; sourceTree = "<group>"; };
+		A20000000000000000000009 /* when.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = when.json; sourceTree = "<group>"; };
+		A2000000000000000000000A /* where.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = where.json; sourceTree = "<group>"; };
+		A2000000000000000000000B /* who.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = who.json; sourceTree = "<group>"; };
+		A2000000000000000000000C /* action.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = action.json; sourceTree = "<group>"; };
+		A2000000000000000000000D /* IdeaSeed.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = IdeaSeed.entitlements; sourceTree = "<group>"; };
+		A2000000000000000000000E /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.text-based-dylib-definition; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
+		A2000000000000000000000F /* IdeaSeed.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IdeaSeed.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A30000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (A1000000000000000000000D /* libsqlite3.tbd in Frameworks */);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A40000000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				A40000000000000000000002 /* IdeaSeed */,
+				A40000000000000000000005 /* Core */,
+				A40000000000000000000006 /* Frameworks */,
+				A40000000000000000000007 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A40000000000000000000002 /* IdeaSeed */ = {
+			isa = PBXGroup;
+			children = (
+				A40000000000000000000003 /* App */,
+				A40000000000000000000004 /* Seed */,
+				A2000000000000000000000D /* IdeaSeed.entitlements */,
+			);
+			path = IdeaSeed;
+			sourceTree = "<group>";
+		};
+		A40000000000000000000003 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000001 /* IdeaSeedApp.swift */,
+				A20000000000000000000002 /* AppModel.swift */,
+				A20000000000000000000003 /* RootView.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		A40000000000000000000004 /* Seed */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000008 /* manifest.json */,
+				A20000000000000000000009 /* when.json */,
+				A2000000000000000000000A /* where.json */,
+				A2000000000000000000000B /* who.json */,
+				A2000000000000000000000C /* action.json */,
+			);
+			path = docs;
+			sourceTree = SOURCE_ROOT;
+		};
+		A40000000000000000000005 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000004 /* Models.swift */,
+				A20000000000000000000005 /* SHA256Digest.swift */,
+				A20000000000000000000006 /* IdeaSeedStore.swift */,
+				A20000000000000000000007 /* DataUpdateService.swift */,
+			);
+			path = Sources/IdeaSeedCore;
+			sourceTree = SOURCE_ROOT;
+		};
+		A40000000000000000000006 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (A2000000000000000000000E /* libsqlite3.tbd */);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		A40000000000000000000007 /* Products */ = {
+			isa = PBXGroup;
+			children = (A2000000000000000000000F /* IdeaSeed.app */);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A50000000000000000000001 /* IdeaSeed */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A90000000000000000000002 /* Build configuration list for PBXNativeTarget "IdeaSeed" */;
+			buildPhases = (
+				A60000000000000000000001 /* Sources */,
+				A30000000000000000000001 /* Frameworks */,
+				A70000000000000000000001 /* Resources */,
+			);
+			buildRules = ();
+			dependencies = ();
+			name = IdeaSeed;
+			productName = IdeaSeed;
+			productReference = A2000000000000000000000F /* IdeaSeed.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A80000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = { A50000000000000000000001 = { CreatedOnToolsVersion = 16.0; }; };
+			};
+			buildConfigurationList = A90000000000000000000001 /* Build configuration list for PBXProject "IdeaSeed" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = ja;
+			hasScannedForEncodings = 0;
+			knownRegions = (ja, en, Base);
+			mainGroup = A40000000000000000000001;
+			productRefGroup = A40000000000000000000007 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (A50000000000000000000001 /* IdeaSeed */);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A70000000000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000008 /* manifest.json in Resources */,
+				A10000000000000000000009 /* when.json in Resources */,
+				A1000000000000000000000A /* where.json in Resources */,
+				A1000000000000000000000B /* who.json in Resources */,
+				A1000000000000000000000C /* action.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A60000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000001 /* IdeaSeedApp.swift in Sources */,
+				A10000000000000000000002 /* AppModel.swift in Sources */,
+				A10000000000000000000003 /* RootView.swift in Sources */,
+				A10000000000000000000004 /* Models.swift in Sources */,
+				A10000000000000000000005 /* SHA256Digest.swift in Sources */,
+				A10000000000000000000006 /* IdeaSeedStore.swift in Sources */,
+				A10000000000000000000007 /* DataUpdateService.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		AA0000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+		};
+			name = Debug;
+		};
+		AA0000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		AA0000000000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = IdeaSeed/IdeaSeed.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "発想の種";
+				INFOPLIST_KEY_DataManifestURL = "https://shopping0322-tech.github.io/idea-seed/manifest.json";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.shopping0322tech.ideaseed;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AA0000000000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = IdeaSeed/IdeaSeed.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "発想の種";
+				INFOPLIST_KEY_DataManifestURL = "https://shopping0322-tech.github.io/idea-seed/manifest.json";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.shopping0322tech.ideaseed;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A90000000000000000000001 /* Build configuration list for PBXProject "IdeaSeed" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (AA0000000000000000000001 /* Debug */, AA0000000000000000000002 /* Release */);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A90000000000000000000002 /* Build configuration list for PBXNativeTarget "IdeaSeed" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (AA0000000000000000000003 /* Debug */, AA0000000000000000000004 /* Release */);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A80000000000000000000001 /* Project object */;
+}

@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "dataVersion": "2026.07.17.1",
+  "categories": [
+    {
+      "id": "when",
+      "label": "いつ",
+      "order": 1,
+      "version": 1,
+      "files": [
+        {
+          "path": "when.json",
+          "sha256": "d344a300cdf866154dee09d5f406ac8ed78129951023ad714cca9e81e32e8a36",
+          "count": 10
+        }
+      ]
+    },
+    {
+      "id": "where",
+      "label": "どこで",
+      "order": 2,
+      "version": 1,
+      "files": [
+        {
+          "path": "where.json",
+          "sha256": "dd26c0c9c7b39a20418e1ae705605b0dc991a02267289a670a37cb6fd09544ab",
+          "count": 10
+        }
+      ]
+    },
+    {
+      "id": "who",
+      "label": "誰が",
+      "order": 3,
+      "version": 1,
+      "files": [
+        {
+          "path": "who.json",
+          "sha256": "868cd8059a2a02df9af458611a20ccbe8c2e63f6a9eb27afaf725a8ef28a5433",
+          "count": 10
+        }
+      ]
+    },
+    {
+      "id": "action",
+      "label": "何をした",
+      "order": 4,
+      "version": 1,
+      "files": [
+        {
+          "path": "action.json",
+          "sha256": "686d6d9d6139775f7a435aea27b1e845d7ef15e8da3b3eb3a8da9463dab414bc",
+          "count": 10
+        }
+      ]
+    }
+  ]
+}
