@@ -60,7 +60,7 @@
 - `action.json`
 - `manifest.json`
 - 初期データは機械結合を使わない明示リスト
-- 現在の件数は `when` 317件、`where` 304件、`who` 287件、`action` 313件
+- 現在の件数は `when` 515件、`where` 479件、`who` 473件、`action` 476件
 - データ生成用スクリプト `Scripts/generate_seed_data.mjs` を実装
 - データ検証・manifest更新用スクリプトを実装
 
