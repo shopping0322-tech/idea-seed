@@ -2,7 +2,7 @@
 
 企画・脚本のための「発想の種」を、カテゴリごとに独立してランダム抽選するiPhone / Macアプリです。AIや外部APIによる生成・意味付けは行いません。
 
-設計の詳細は [ARCHITECTURE.md](ARCHITECTURE.md) を参照してください。
+設計の詳細は [ARCHITECTURE.md](ARCHITECTURE.md)、現在地と再開手順は [PROJECT_STATUS.md](PROJECT_STATUS.md) を参照してください。
 
 ## 現在の実装
 

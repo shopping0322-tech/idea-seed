@@ -3,7 +3,7 @@
 - ステータス: 採用
 - 決定日: 2026-07-17
 - 対象: iPhone / Mac
-- 実装状況: MVP実装済み（Xcode環境でのビルド検証待ち）
+- 実装状況: MVP実装・GitHub Pages公開済み（容量不足のためXcode環境でのビルド検証を保留）
 - 正式アプリ名: 発想の種
 - 内部プロジェクト名: IdeaSeed
 - Bundle Identifier: `io.github.shopping0322tech.ideaseed`
