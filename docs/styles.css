@@ -219,7 +219,7 @@ h2 { margin-bottom: 0; font-size: 1.65rem; letter-spacing: -0.04em; }
 
 .history-card {
   position: relative;
-  padding: 18px;
+  padding: 18px 48px 18px 18px;
 }
 
 .history-time { margin: 0 0 14px; color: var(--muted); font-size: 0.72rem; }
@@ -230,18 +230,70 @@ h2 { margin-bottom: 0; font-size: 1.65rem; letter-spacing: -0.04em; }
 .history-row dd { margin: 0; line-height: 1.45; overflow-wrap: anywhere; }
 
 .history-delete-button {
-  margin-top: 14px;
-  padding: 8px 11px;
-  border: 1px solid rgba(255, 138, 134, 0.34);
-  border-radius: 10px;
-  color: var(--danger);
-  background: rgba(255, 138, 134, 0.08);
-  font-size: 0.78rem;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  color: var(--muted);
+  background: transparent;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.history-delete-button:active { background: rgba(255, 255, 255, 0.08); }
+.history-delete-button:disabled { cursor: default; opacity: 0.45; }
+
+.confirm-dialog {
+  width: min(calc(100% - 40px), 420px);
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  color: var(--text);
+  background: var(--surface-raised);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+}
+
+.confirm-dialog::backdrop {
+  background: rgba(8, 7, 11, 0.72);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+}
+
+.confirm-dialog-content { padding: 24px 20px 20px; }
+.confirm-dialog h2 { margin: 0 0 10px; font-size: 1.25rem; }
+.confirm-dialog p { margin: 0; color: var(--muted); line-height: 1.6; }
+
+.confirm-dialog-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.modal-button {
+  min-height: 46px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.05);
   font-weight: 800;
   cursor: pointer;
 }
 
-.history-delete-button:disabled { cursor: default; opacity: 0.45; }
+.modal-delete-button {
+  border-color: rgba(255, 138, 134, 0.35);
+  color: #27100f;
+  background: var(--danger);
+}
+
+.modal-button:disabled { cursor: wait; opacity: 0.5; }
 
 .action-footer {
   position: fixed;

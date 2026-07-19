@@ -73,6 +73,17 @@
     </footer>
   </div>
 
+  <dialog id="confirm-dialog" class="confirm-dialog" aria-labelledby="confirm-dialog-title" aria-describedby="confirm-dialog-message">
+    <div class="confirm-dialog-content">
+      <h2 id="confirm-dialog-title">削除しますか？</h2>
+      <p id="confirm-dialog-message"></p>
+      <div class="confirm-dialog-actions">
+        <button id="confirm-cancel-button" class="modal-button" type="button">キャンセル</button>
+        <button id="confirm-delete-button" class="modal-button modal-delete-button" type="button">削除</button>
+      </div>
+    </div>
+  </dialog>
+
   <noscript>このアプリを利用するにはJavaScriptを有効にしてください。</noscript>
   <script type="module" src="app.js"></script>
 </body>

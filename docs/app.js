@@ -12,6 +12,11 @@ const elements = {
   historySearch: document.querySelector("#history-search"),
   historySort: document.querySelector("#history-sort"),
   clearHistoryButton: document.querySelector("#clear-history-button"),
+  confirmDialog: document.querySelector("#confirm-dialog"),
+  confirmDialogTitle: document.querySelector("#confirm-dialog-title"),
+  confirmDialogMessage: document.querySelector("#confirm-dialog-message"),
+  confirmCancelButton: document.querySelector("#confirm-cancel-button"),
+  confirmDeleteButton: document.querySelector("#confirm-delete-button"),
   tabs: [...document.querySelectorAll(".tab-button")],
   panels: [...document.querySelectorAll(".view-panel")],
 };
@@ -19,6 +24,7 @@ const elements = {
 let categories = [];
 let generating = false;
 let historyRecords = [];
+let pendingDeleteAction = null;
 
 start();
 
@@ -46,6 +52,9 @@ function bindEvents() {
   elements.historySort.addEventListener("change", renderHistoryList);
   elements.clearHistoryButton.addEventListener("click", clearAllHistory);
   elements.historyList.addEventListener("click", handleHistoryClick);
+  elements.confirmCancelButton.addEventListener("click", () => elements.confirmDialog.close());
+  elements.confirmDeleteButton.addEventListener("click", confirmDelete);
+  elements.confirmDialog.addEventListener("close", resetConfirmation);
   elements.tabs.forEach((tab) => tab.addEventListener("click", () => showView(tab.dataset.view)));
 }
 
@@ -152,37 +161,63 @@ function createHistoryCard(record) {
   deleteButton.className = "history-delete-button";
   deleteButton.type = "button";
   deleteButton.dataset.deleteHistoryId = record.id;
-  deleteButton.textContent = "削除";
+  deleteButton.setAttribute("aria-label", "この履歴を削除");
+  deleteButton.textContent = "×";
   card.append(time, list, deleteButton);
   return card;
 }
 
-async function handleHistoryClick(event) {
+function handleHistoryClick(event) {
   const button = event.target.closest("[data-delete-history-id]");
   if (!button) return;
-  button.disabled = true;
+  const historyId = button.dataset.deleteHistoryId;
+  openConfirmation({
+    title: "この履歴を削除しますか？",
+    message: "削除した履歴は元に戻せません。",
+    action: async () => {
+      await deleteHistory(historyId);
+      historyRecords = historyRecords.filter((record) => record.id !== historyId);
+      renderHistoryList();
+    },
+  });
+}
+
+function clearAllHistory() {
+  if (historyRecords.length === 0) return;
+  openConfirmation({
+    title: "履歴をすべて削除しますか？",
+    message: `${historyRecords.length}件の履歴を削除します。この操作は元に戻せません。`,
+    action: async () => {
+      await clearHistory();
+      historyRecords = [];
+      renderHistoryList();
+    },
+  });
+}
+
+function openConfirmation({ title, message, action }) {
+  pendingDeleteAction = action;
+  elements.confirmDialogTitle.textContent = title;
+  elements.confirmDialogMessage.textContent = message;
+  elements.confirmDeleteButton.disabled = false;
+  elements.confirmDialog.showModal();
+}
+
+async function confirmDelete() {
+  if (!pendingDeleteAction) return;
+  elements.confirmDeleteButton.disabled = true;
   try {
-    await deleteHistory(button.dataset.deleteHistoryId);
-    historyRecords = historyRecords.filter((record) => record.id !== button.dataset.deleteHistoryId);
-    renderHistoryList();
+    await pendingDeleteAction();
+    elements.confirmDialog.close();
   } catch (error) {
-    button.disabled = false;
-    elements.historyList.textContent = error.message ?? "履歴を削除できませんでした。";
+    elements.confirmDeleteButton.disabled = false;
+    elements.confirmDialogMessage.textContent = error.message ?? "履歴を削除できませんでした。";
   }
 }
 
-async function clearAllHistory() {
-  if (historyRecords.length === 0) return;
-  if (!confirm("履歴をすべて削除しますか？")) return;
-  elements.clearHistoryButton.disabled = true;
-  try {
-    await clearHistory();
-    historyRecords = [];
-    renderHistoryList();
-  } catch (error) {
-    elements.clearHistoryButton.disabled = false;
-    elements.historyList.textContent = error.message ?? "履歴を削除できませんでした。";
-  }
+function resetConfirmation() {
+  pendingDeleteAction = null;
+  elements.confirmDeleteButton.disabled = false;
 }
 
 function historySearchText(record) {

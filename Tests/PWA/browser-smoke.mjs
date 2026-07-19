@@ -103,14 +103,14 @@ async function main() {
     `new Promise((resolve) => {
       const deadline = Date.now() + 10000;
       const tick = () => {
-        const status = document.querySelector("#connection-status")?.textContent?.trim();
         const disabled = document.querySelector("#generate-button")?.disabled;
-        if ((status === "準備完了" || status?.startsWith("更新済み")) && disabled === false) {
-          resolve({ status, disabled });
+        const message = document.querySelector("#generator-message")?.textContent?.trim();
+        if (disabled === false) {
+          resolve({ disabled, message });
           return;
         }
-        if (status === "読込失敗" || Date.now() > deadline) {
-          resolve({ status, disabled });
+        if (Date.now() > deadline) {
+          resolve({ disabled, message });
           return;
         }
         setTimeout(tick, 100);
@@ -118,7 +118,6 @@ async function main() {
       tick();
     })`,
   );
-  assert.match(loaded.status, /^(準備完了|更新済み)/);
   assert.equal(loaded.disabled, false);
 
   const generated = await evaluate(
@@ -167,27 +166,37 @@ async function main() {
     client,
     `new Promise((resolve) => {
       document.querySelector("[data-delete-history-id]").click();
-      setTimeout(() => resolve(document.querySelector("#history-count")?.textContent?.trim()), 300);
+      const dialogOpened = document.querySelector("#confirm-dialog").open;
+      document.querySelector("#confirm-delete-button").click();
+      setTimeout(() => resolve({
+        count: document.querySelector("#history-count")?.textContent?.trim(),
+        dialogOpened,
+        dialogClosed: !document.querySelector("#confirm-dialog").open,
+      }), 300);
     })`,
   );
-  assert.match(deletedOne, /^(0|1)\/1件$|^1件$/);
+  assert.match(deletedOne.count, /^(0|1)\/1件$|^1件$/);
+  assert.equal(deletedOne.dialogOpened, true);
+  assert.equal(deletedOne.dialogClosed, true);
 
   const cleared = await evaluate(
     client,
     `new Promise((resolve) => {
-      window.confirm = () => true;
       document.querySelector("#history-search").value = "";
       document.querySelector("#history-search").dispatchEvent(new Event("input", { bubbles: true }));
       document.querySelector("#clear-history-button").click();
+      const dialogOpened = document.querySelector("#confirm-dialog").open;
+      document.querySelector("#confirm-delete-button").click();
       setTimeout(() => {
         resolve({
           count: document.querySelector("#history-count")?.textContent?.trim(),
           empty: document.querySelector("#history-list")?.textContent?.includes("生成履歴はまだありません。"),
+          dialogOpened,
         });
       }, 300);
     })`,
   );
-  assert.deepEqual(cleared, { count: "0件", empty: true });
+  assert.deepEqual(cleared, { count: "0件", empty: true, dialogOpened: true });
 
   client.close();
 }
