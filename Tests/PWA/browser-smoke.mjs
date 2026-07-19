@@ -136,6 +136,59 @@ async function main() {
   assert.equal(generated.cards, 4);
   assert.equal(generated.historyCount, "1件");
 
+  const historyTools = await evaluate(
+    client,
+    `new Promise((resolve) => {
+      document.querySelector("#generate-button").click();
+      setTimeout(() => {
+        document.querySelector('[data-view="history"]').click();
+        const firstValue = document.querySelector(".history-card dd")?.textContent?.trim() ?? "";
+        document.querySelector("#history-search").value = firstValue;
+        document.querySelector("#history-search").dispatchEvent(new Event("input", { bubbles: true }));
+        document.querySelector("#history-sort").value = "newest";
+        document.querySelector("#history-sort").dispatchEvent(new Event("change", { bubbles: true }));
+        setTimeout(() => {
+          resolve({
+            footerHidden: document.querySelector(".action-footer").hidden,
+            searchCount: document.querySelector("#history-count")?.textContent?.trim(),
+            sortValue: document.querySelector("#history-sort")?.value,
+            deleteButtons: document.querySelectorAll("[data-delete-history-id]").length,
+          });
+        }, 300);
+      }, 500);
+    })`,
+  );
+  assert.equal(historyTools.footerHidden, true);
+  assert.match(historyTools.searchCount, /^\d+\/2件$/);
+  assert.equal(historyTools.sortValue, "newest");
+  assert.equal(historyTools.deleteButtons >= 1, true);
+
+  const deletedOne = await evaluate(
+    client,
+    `new Promise((resolve) => {
+      document.querySelector("[data-delete-history-id]").click();
+      setTimeout(() => resolve(document.querySelector("#history-count")?.textContent?.trim()), 300);
+    })`,
+  );
+  assert.match(deletedOne, /^(0|1)\/1件$|^1件$/);
+
+  const cleared = await evaluate(
+    client,
+    `new Promise((resolve) => {
+      window.confirm = () => true;
+      document.querySelector("#history-search").value = "";
+      document.querySelector("#history-search").dispatchEvent(new Event("input", { bubbles: true }));
+      document.querySelector("#clear-history-button").click();
+      setTimeout(() => {
+        resolve({
+          count: document.querySelector("#history-count")?.textContent?.trim(),
+          empty: document.querySelector("#history-list")?.textContent?.includes("生成履歴はまだありません。"),
+        });
+      }, 300);
+    })`,
+  );
+  assert.deepEqual(cleared, { count: "0件", empty: true });
+
   client.close();
 }
 

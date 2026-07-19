@@ -128,6 +128,22 @@ export async function addHistory(record) {
   await done;
 }
 
+export async function deleteHistory(id) {
+  const database = await openDatabase();
+  const transaction = database.transaction("history", "readwrite");
+  const done = transactionDone(transaction);
+  transaction.objectStore("history").delete(id);
+  await done;
+}
+
+export async function clearHistory() {
+  const database = await openDatabase();
+  const transaction = database.transaction("history", "readwrite");
+  const done = transactionDone(transaction);
+  transaction.objectStore("history").clear();
+  await done;
+}
+
 export async function getHistoryOldestFirst() {
   const database = await openDatabase();
   const transaction = database.transaction("history", "readonly");

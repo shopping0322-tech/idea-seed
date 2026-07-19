@@ -1,20 +1,25 @@
 import { loadDataset } from "./data-service.js";
-import { addHistory, getEntryAt, getHistoryOldestFirst } from "./data-store.js";
+import { addHistory, clearHistory, deleteHistory, getEntryAt, getHistoryOldestFirst } from "./data-store.js";
 import { secureRandomInteger } from "./random.js";
 
 const elements = {
   connectionStatus: document.querySelector("#connection-status"),
   generateButton: document.querySelector("#generate-button"),
   generatorMessage: document.querySelector("#generator-message"),
+  actionFooter: document.querySelector(".action-footer"),
   resultList: document.querySelector("#result-list"),
   historyList: document.querySelector("#history-list"),
   historyCount: document.querySelector("#history-count"),
+  historySearch: document.querySelector("#history-search"),
+  historySort: document.querySelector("#history-sort"),
+  clearHistoryButton: document.querySelector("#clear-history-button"),
   tabs: [...document.querySelectorAll(".tab-button")],
   panels: [...document.querySelectorAll(".view-panel")],
 };
 
 let categories = [];
 let generating = false;
+let historyRecords = [];
 
 start();
 
@@ -44,6 +49,10 @@ async function start() {
 
 function bindEvents() {
   elements.generateButton.addEventListener("click", generate);
+  elements.historySearch.addEventListener("input", renderHistoryList);
+  elements.historySort.addEventListener("change", renderHistoryList);
+  elements.clearHistoryButton.addEventListener("click", clearAllHistory);
+  elements.historyList.addEventListener("click", handleHistoryClick);
   elements.tabs.forEach((tab) => tab.addEventListener("click", () => showView(tab.dataset.view)));
   window.addEventListener("online", updateConnectionIndicator);
   window.addEventListener("offline", updateConnectionIndicator);
@@ -97,21 +106,40 @@ function renderResult(record) {
 
 async function renderHistory() {
   try {
-    const history = await getHistoryOldestFirst();
-    elements.historyCount.textContent = `${history.length}件`;
-    if (history.length === 0) {
-      elements.historyList.innerHTML = '<div class="empty-state compact"><p>生成履歴はまだありません。</p></div>';
-      return;
-    }
-    elements.historyList.replaceChildren(...history.map(createHistoryCard));
+    historyRecords = await getHistoryOldestFirst();
+    renderHistoryList();
   } catch (error) {
     elements.historyList.textContent = error.message ?? "履歴を読み込めませんでした。";
   }
 }
 
+function renderHistoryList() {
+  const query = normalizeSearchText(elements.historySearch.value);
+  const filtered = historyRecords
+    .filter((record) => !query || historySearchText(record).includes(query))
+    .sort((a, b) => {
+      const direction = elements.historySort.value === "newest" ? -1 : 1;
+      return direction * (a.createdAt - b.createdAt || a.id.localeCompare(b.id));
+    });
+
+  elements.historyCount.textContent = query ? `${filtered.length}/${historyRecords.length}件` : `${historyRecords.length}件`;
+  elements.clearHistoryButton.disabled = historyRecords.length === 0;
+
+  if (historyRecords.length === 0) {
+    elements.historyList.innerHTML = '<div class="empty-state compact"><p>生成履歴はまだありません。</p></div>';
+    return;
+  }
+  if (filtered.length === 0) {
+    elements.historyList.innerHTML = '<div class="empty-state compact"><p>一致する履歴はありません。</p></div>';
+    return;
+  }
+  elements.historyList.replaceChildren(...filtered.map(createHistoryCard));
+}
+
 function createHistoryCard(record) {
   const card = document.createElement("article");
   card.className = "history-card";
+  card.dataset.historyId = record.id;
   const time = document.createElement("p");
   time.className = "history-time";
   time.textContent = new Intl.DateTimeFormat("ja-JP", {
@@ -129,8 +157,55 @@ function createHistoryCard(record) {
     row.append(term, description);
     list.append(row);
   });
-  card.append(time, list);
+  const deleteButton = document.createElement("button");
+  deleteButton.className = "history-delete-button";
+  deleteButton.type = "button";
+  deleteButton.dataset.deleteHistoryId = record.id;
+  deleteButton.textContent = "削除";
+  card.append(time, list, deleteButton);
   return card;
+}
+
+async function handleHistoryClick(event) {
+  const button = event.target.closest("[data-delete-history-id]");
+  if (!button) return;
+  button.disabled = true;
+  try {
+    await deleteHistory(button.dataset.deleteHistoryId);
+    historyRecords = historyRecords.filter((record) => record.id !== button.dataset.deleteHistoryId);
+    renderHistoryList();
+  } catch (error) {
+    button.disabled = false;
+    elements.historyList.textContent = error.message ?? "履歴を削除できませんでした。";
+  }
+}
+
+async function clearAllHistory() {
+  if (historyRecords.length === 0) return;
+  if (!confirm("履歴をすべて削除しますか？")) return;
+  elements.clearHistoryButton.disabled = true;
+  try {
+    await clearHistory();
+    historyRecords = [];
+    renderHistoryList();
+  } catch (error) {
+    elements.clearHistoryButton.disabled = false;
+    elements.historyList.textContent = error.message ?? "履歴を削除できませんでした。";
+  }
+}
+
+function historySearchText(record) {
+  const date = new Intl.DateTimeFormat("ja-JP", {
+    year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit",
+  }).format(new Date(record.createdAt));
+  return normalizeSearchText([
+    date,
+    ...record.items.flatMap((item) => [item.categoryLabel, item.value]),
+  ].join(" "));
+}
+
+function normalizeSearchText(text) {
+  return text.normalize("NFKC").trim().toLowerCase();
 }
 
 function showView(name) {
@@ -144,7 +219,7 @@ function showView(name) {
     panel.classList.toggle("is-active", selected);
     panel.hidden = !selected;
   });
-  elements.generateButton.hidden = name !== "generator";
+  elements.actionFooter.hidden = name !== "generator";
 }
 
 function updateConnectionIndicator() {
