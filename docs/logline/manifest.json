@@ -1,17 +1,22 @@
 {
   "schemaVersion": 1,
-  "dataVersion": "2026.07.19.1",
+  "dataVersion": "2026.07.19.2",
   "categories": [
     {
       "id": "protagonists",
       "label": "主人公",
       "order": 1,
-      "version": 1,
+      "version": 2,
       "files": [
         {
           "path": "protagonists.json",
           "sha256": "cec87790c653c0f0dff2dbb88957d16d8e62ba01080fee94577e0e26c421c66a",
           "count": 40
+        },
+        {
+          "path": "protagonists_extra.json",
+          "sha256": "725bfd787db81e2af4539f54743e58d16467cf08e2d3eb5a2c9c2e6a8e16b40c",
+          "count": 60
         }
       ]
     },
@@ -19,12 +24,17 @@
       "id": "desires",
       "label": "欲望",
       "order": 2,
-      "version": 1,
+      "version": 2,
       "files": [
         {
           "path": "desires.json",
           "sha256": "974f472753968c9e835c7a4b064b960f7f8ed2f96af2298009cf260afcbb8792",
           "count": 40
+        },
+        {
+          "path": "desires_extra.json",
+          "sha256": "0c91e971a09b65ca0a351fd1cb17d89e6f5c5129ddcbc89988aad9078eed8606",
+          "count": 60
         }
       ]
     },
@@ -32,12 +42,17 @@
       "id": "daily_triggers",
       "label": "日常の入口",
       "order": 3,
-      "version": 1,
+      "version": 2,
       "files": [
         {
           "path": "daily_triggers.json",
           "sha256": "27c3f40e7e99d824461ce8eff235d7da04f4b58c97a7a14f58bf93b355745854",
           "count": 40
+        },
+        {
+          "path": "daily_triggers_extra.json",
+          "sha256": "76e55e067015526f34597b501f9341f036444bc2874ace0295dfbca3937dd4b4",
+          "count": 60
         }
       ]
     },
@@ -45,12 +60,17 @@
       "id": "phenomena",
       "label": "異常現象・世界ルール",
       "order": 4,
-      "version": 1,
+      "version": 2,
       "files": [
         {
           "path": "phenomena.json",
           "sha256": "e05de41150082e199ef8c59fe2eab0b9a0ed2546c3bf1898d0b2c8b008dd3857",
           "count": 40
+        },
+        {
+          "path": "phenomena_extra.json",
+          "sha256": "7f0e604058ae111ee156fde38e8313d30018381ebb9ec808e17b77c976874a5e",
+          "count": 60
         }
       ]
     },
@@ -58,12 +78,17 @@
       "id": "settings",
       "label": "舞台",
       "order": 5,
-      "version": 1,
+      "version": 2,
       "files": [
         {
           "path": "settings.json",
           "sha256": "edaef65cff13a39e66cd8c7f81ace12255caf84208b2fbc81b8194cf5c95a03e",
           "count": 40
+        },
+        {
+          "path": "settings_extra.json",
+          "sha256": "684ce8154f80fe87815b6bb0c320f79ff362ac9ca1a677eee37dbdd7b0839e6c",
+          "count": 60
         }
       ]
     },
@@ -71,12 +96,17 @@
       "id": "scales",
       "label": "スケール",
       "order": 6,
-      "version": 1,
+      "version": 2,
       "files": [
         {
           "path": "scales.json",
           "sha256": "b404bb9dd4c2703f94ccc53cf600938a381b197b1862b9cc014d7b71fab59360",
           "count": 40
+        },
+        {
+          "path": "scales_extra.json",
+          "sha256": "7afa7965ed148789b88a7ae3a0acedbfb71ec9a3fc157c58bfe74eafa1221e85",
+          "count": 60
         }
       ]
     }

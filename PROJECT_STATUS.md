@@ -84,7 +84,7 @@
 - データ検証・manifest更新用スクリプトを実装
 - ログライン専用の`docs/logline/manifest.json`を追加
 - ログライン用カテゴリは`protagonists`、`desires`、`daily_triggers`、`phenomena`、`settings`、`scales`
-- ログライン用データは各40件、合計240件の明示リスト
+- ログライン用データは各100件、合計600件の明示リスト
 
 ### ネイティブ版
 

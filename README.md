@@ -69,12 +69,12 @@ python3 Scripts/data_manifest.py
 ログライン生成のデータは`docs/logline/`で独立管理しています。
 
 ```text
-protagonists: 40
-desires: 40
-daily_triggers: 40
-phenomena: 40
-settings: 40
-scales: 40
+protagonists: 100
+desires: 100
+daily_triggers: 100
+phenomena: 100
+settings: 100
+scales: 100
 ```
 
 ログライン用データの検証とmanifest更新:

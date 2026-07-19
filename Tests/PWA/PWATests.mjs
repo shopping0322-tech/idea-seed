@@ -22,7 +22,10 @@ test("logline manifest contains six curated categories", async () => {
     "settings",
     "scales",
   ]);
-  assert.deepEqual(manifest.categories.map((category) => category.files[0].count), [40, 40, 40, 40, 40, 40]);
+  assert.deepEqual(
+    manifest.categories.map((category) => category.files.reduce((total, file) => total + file.count, 0)),
+    [100, 100, 100, 100, 100, 100],
+  );
 });
 
 test("secure random integer stays inside the requested range", () => {
