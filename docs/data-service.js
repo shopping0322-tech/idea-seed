@@ -25,25 +25,25 @@ export function validateManifest(manifest) {
   return manifest;
 }
 
-export async function loadDataset() {
-  const local = await getDatasetSnapshot();
+export async function loadDataset({ datasetId = "scene", manifestPath = "manifest.json" } = {}) {
+  const local = await getDatasetSnapshot(datasetId);
   try {
-    const manifest = validateManifest(await fetchJsonWithCacheBust("manifest.json", Date.now().toString()));
-    const localById = new Map(local.categories.map((category) => [category.id, category]));
+    const manifest = validateManifest(await fetchJsonWithCacheBust(manifestPath, Date.now().toString()));
+    const localById = new Map(local.categories.map((category) => [category.categoryId ?? category.id, category]));
     const changed = manifest.categories.filter((category) => localById.get(category.id)?.version !== category.version);
-    const localIds = new Set(local.categories.map((category) => category.id));
+    const localIds = new Set(local.categories.map((category) => category.categoryId ?? category.id));
     const removed = [...localIds].some((id) => !manifest.categories.some((category) => category.id === id));
     const metadataChanged = local.manifest?.dataVersion !== manifest.dataVersion;
 
     if (changed.length > 0 || removed || metadataChanged) {
       const prepared = new Map();
       for (const category of changed) {
-        prepared.set(category.id, await prepareCategory(category));
+        prepared.set(category.id, await prepareCategory(category, manifestPath));
       }
-      await installDataset(manifest, prepared);
+      await installDataset(datasetId, manifest, prepared);
     }
 
-    const installed = await getDatasetSnapshot();
+    const installed = await getDatasetSnapshot(datasetId);
     if (installed.categories.length === 0) throw new Error("利用できるカテゴリがありません");
     return {
       ...installed,
@@ -56,10 +56,11 @@ export async function loadDataset() {
   }
 }
 
-async function prepareCategory(category) {
+async function prepareCategory(category, manifestPath) {
   const values = [];
+  const manifestUrl = new URL(manifestPath, window.location.href);
   for (const file of category.files) {
-    const response = await fetchWithCacheBust(file.path, file.sha256);
+    const response = await fetchWithCacheBust(new URL(file.path, manifestUrl), file.sha256);
     const bytes = await response.arrayBuffer();
     const digest = await sha256Hex(bytes);
     if (digest !== file.sha256.toLowerCase()) throw new Error(`SHA-256が一致しません: ${file.path}`);

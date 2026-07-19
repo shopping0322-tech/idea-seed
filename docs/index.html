@@ -18,18 +18,45 @@
   <div class="app-shell">
     <header class="app-header">
       <div>
-        <p class="eyebrow">IDEA SEED</p>
+        <p id="app-eyebrow" class="eyebrow">IDEA SEED</p>
         <h1>発想の種</h1>
       </div>
+      <button id="menu-button" class="header-menu-button" type="button" hidden>メニュー</button>
     </header>
 
-    <nav class="tab-bar" aria-label="画面切り替え">
+    <nav class="tab-bar" aria-label="画面切り替え" hidden>
       <button class="tab-button is-active" type="button" data-view="generator" aria-selected="true">生成</button>
       <button class="tab-button" type="button" data-view="history" aria-selected="false">履歴</button>
     </nav>
 
     <main>
-      <section id="generator-view" class="view-panel is-active" aria-labelledby="generator-title">
+      <section id="menu-view" class="view-panel is-active" aria-labelledby="menu-title">
+        <div class="menu-heading">
+          <p class="eyebrow">CHOOSE A GENERATOR</p>
+          <h2 id="menu-title">何を考える？</h2>
+          <p>欲しい発想の種を選んでください。</p>
+        </div>
+        <div class="generator-menu">
+          <button class="generator-menu-card" type="button" data-generator-id="scene">
+            <span class="menu-card-index">01</span>
+            <span class="menu-card-body">
+              <strong>シーン生成</strong>
+              <small>いつ・どこで・誰が・何をした</small>
+            </span>
+            <span class="menu-card-arrow" aria-hidden="true">→</span>
+          </button>
+          <button class="generator-menu-card" type="button" data-generator-id="logline">
+            <span class="menu-card-index">02</span>
+            <span class="menu-card-body">
+              <strong>ログライン生成</strong>
+              <small>主人公・欲望・日常・異常・舞台・スケール</small>
+            </span>
+            <span class="menu-card-arrow" aria-hidden="true">→</span>
+          </button>
+        </div>
+      </section>
+
+      <section id="generator-view" class="view-panel" aria-labelledby="generator-title" hidden>
         <h2 id="generator-title" class="visually-hidden">生成結果</h2>
         <div id="result-list" class="result-list" aria-live="polite">
           <div class="empty-state">
@@ -43,7 +70,7 @@
       <section id="history-view" class="view-panel" aria-labelledby="history-title" hidden>
         <div class="section-heading">
           <div>
-            <p class="eyebrow">OLDEST FIRST</p>
+            <p class="eyebrow">HISTORY</p>
             <h2 id="history-title">履歴</h2>
           </div>
           <span id="history-count" class="count-badge">0件</span>
@@ -65,7 +92,7 @@
       </section>
     </main>
 
-    <footer class="action-footer">
+    <footer class="action-footer" hidden>
       <button id="generate-button" class="generate-button" type="button" disabled>
         <span class="generate-label">生成</span>
         <span class="generate-symbol" aria-hidden="true">✦</span>

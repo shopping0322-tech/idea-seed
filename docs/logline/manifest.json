@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "dataVersion": "2026.07.19.1",
+  "categories": [
+    {
+      "id": "protagonists",
+      "label": "主人公",
+      "order": 1,
+      "version": 1,
+      "files": [
+        {
+          "path": "protagonists.json",
+          "sha256": "cec87790c653c0f0dff2dbb88957d16d8e62ba01080fee94577e0e26c421c66a",
+          "count": 40
+        }
+      ]
+    },
+    {
+      "id": "desires",
+      "label": "欲望",
+      "order": 2,
+      "version": 1,
+      "files": [
+        {
+          "path": "desires.json",
+          "sha256": "974f472753968c9e835c7a4b064b960f7f8ed2f96af2298009cf260afcbb8792",
+          "count": 40
+        }
+      ]
+    },
+    {
+      "id": "daily_triggers",
+      "label": "日常の入口",
+      "order": 3,
+      "version": 1,
+      "files": [
+        {
+          "path": "daily_triggers.json",
+          "sha256": "27c3f40e7e99d824461ce8eff235d7da04f4b58c97a7a14f58bf93b355745854",
+          "count": 40
+        }
+      ]
+    },
+    {
+      "id": "phenomena",
+      "label": "異常現象・世界ルール",
+      "order": 4,
+      "version": 1,
+      "files": [
+        {
+          "path": "phenomena.json",
+          "sha256": "e05de41150082e199ef8c59fe2eab0b9a0ed2546c3bf1898d0b2c8b008dd3857",
+          "count": 40
+        }
+      ]
+    },
+    {
+      "id": "settings",
+      "label": "舞台",
+      "order": 5,
+      "version": 1,
+      "files": [
+        {
+          "path": "settings.json",
+          "sha256": "edaef65cff13a39e66cd8c7f81ace12255caf84208b2fbc81b8194cf5c95a03e",
+          "count": 40
+        }
+      ]
+    },
+    {
+      "id": "scales",
+      "label": "スケール",
+      "order": 6,
+      "version": 1,
+      "files": [
+        {
+          "path": "scales.json",
+          "sha256": "b404bb9dd4c2703f94ccc53cf600938a381b197b1862b9cc014d7b71fab59360",
+          "count": 40
+        }
+      ]
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-const CACHE_NAME = "idea-seed-shell-v8";
+const CACHE_NAME = "idea-seed-shell-v9";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -13,6 +13,7 @@ const APP_SHELL = [
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./manifest.json",
+  "./logline/manifest.json",
 ];
 
 self.addEventListener("install", (event) => {

@@ -3,13 +3,32 @@ import { addHistory, clearHistory, deleteHistory, getEntryAt, getHistoryOldestFi
 import { secureRandomInteger } from "./random.js";
 
 const HISTORY_SORT_STORAGE_KEY = "idea-seed-history-sort";
+const GENERATORS = new Map([
+  ["scene", {
+    id: "scene",
+    label: "シーン生成",
+    eyebrow: "SCENE SEED",
+    manifestPath: "manifest.json",
+  }],
+  ["logline", {
+    id: "logline",
+    label: "ログライン生成",
+    eyebrow: "LOGLINE SEED",
+    manifestPath: "logline/manifest.json",
+  }],
+]);
 
 const elements = {
+  appEyebrow: document.querySelector("#app-eyebrow"),
+  menuButton: document.querySelector("#menu-button"),
+  menuCards: [...document.querySelectorAll("[data-generator-id]")],
+  tabBar: document.querySelector(".tab-bar"),
   generateButton: document.querySelector("#generate-button"),
   generatorMessage: document.querySelector("#generator-message"),
   actionFooter: document.querySelector(".action-footer"),
   resultList: document.querySelector("#result-list"),
   historyList: document.querySelector("#history-list"),
+  historyTitle: document.querySelector("#history-title"),
   historyCount: document.querySelector("#history-count"),
   historySearch: document.querySelector("#history-search"),
   historySort: document.querySelector("#history-sort"),
@@ -23,33 +42,27 @@ const elements = {
   panels: [...document.querySelectorAll(".view-panel")],
 };
 
+let currentGenerator = null;
 let categories = [];
 let generating = false;
+let loadingSequence = 0;
 let historyRecords = [];
 let pendingDeleteAction = null;
 
 start();
 
-async function start() {
-  restoreHistorySort();
+function start() {
   bindEvents();
   registerServiceWorker();
-  try {
-    const dataset = await loadDataset();
-    categories = dataset.categories;
-    elements.generateButton.disabled = false;
-    if (dataset.source === "updated") {
-      setMessage("最新データを保存しました。次回からオフラインでも利用できます。");
-    } else if (dataset.source === "offline") {
-      setMessage("保存済みデータを使用しています。");
-    }
-  } catch (error) {
-    setMessage(error.message ?? "データを読み込めませんでした。", true);
-  }
-  await renderHistory();
+  showView("menu");
+  document.body.dataset.appReady = "true";
 }
 
 function bindEvents() {
+  elements.menuCards.forEach((card) => card.addEventListener("click", () => selectGenerator(card.dataset.generatorId)));
+  elements.menuButton.addEventListener("click", () => {
+    if (!generating) showView("menu");
+  });
   elements.generateButton.addEventListener("click", generate);
   elements.historySearch.addEventListener("input", renderHistoryList);
   elements.historySort.addEventListener("change", changeHistorySort);
@@ -61,8 +74,45 @@ function bindEvents() {
   elements.tabs.forEach((tab) => tab.addEventListener("click", () => showView(tab.dataset.view)));
 }
 
+async function selectGenerator(generatorId) {
+  const generator = GENERATORS.get(generatorId);
+  if (!generator || generating) return;
+
+  const sequence = ++loadingSequence;
+  currentGenerator = generator;
+  document.body.dataset.generator = generator.id;
+  categories = [];
+  historyRecords = [];
+  elements.appEyebrow.textContent = generator.eyebrow;
+  elements.historyTitle.textContent = `${generator.label}の履歴`;
+  elements.historySearch.value = "";
+  restoreHistorySort();
+  resetResult();
+  setMessage("データを読み込んでいます…");
+  elements.generateButton.disabled = true;
+  showView("generator");
+
+  try {
+    const dataset = await loadDataset({ datasetId: generator.id, manifestPath: generator.manifestPath });
+    if (sequence !== loadingSequence || currentGenerator?.id !== generator.id) return;
+    categories = dataset.categories;
+    elements.generateButton.disabled = false;
+    if (dataset.source === "updated") {
+      setMessage("最新データを保存しました。次回からオフラインでも利用できます。");
+    } else if (dataset.source === "offline") {
+      setMessage("保存済みデータを使用しています。");
+    } else {
+      setMessage("");
+    }
+    await renderHistory();
+  } catch (error) {
+    if (sequence !== loadingSequence) return;
+    setMessage(error.message ?? "データを読み込めませんでした。", true);
+  }
+}
+
 async function generate() {
-  if (generating || categories.length === 0) return;
+  if (generating || !currentGenerator || categories.length === 0) return;
   generating = true;
   elements.generateButton.disabled = true;
   elements.generateButton.classList.add("is-generating");
@@ -71,7 +121,7 @@ async function generate() {
     const items = await Promise.all(categories.map(async (category) => {
       const index = secureRandomInteger(category.count);
       return {
-        categoryId: category.id,
+        categoryId: category.categoryId ?? category.id,
         categoryLabel: category.label,
         displayOrder: category.order,
         value: await getEntryAt(category, index),
@@ -79,6 +129,7 @@ async function generate() {
     }));
     const record = {
       id: crypto.randomUUID(),
+      generatorId: currentGenerator.id,
       createdAt: Date.now(),
       items: items.sort((a, b) => a.displayOrder - b.displayOrder),
     };
@@ -89,9 +140,17 @@ async function generate() {
     setMessage(error.message ?? "抽選に失敗しました。", true);
   } finally {
     generating = false;
-    elements.generateButton.disabled = false;
+    elements.generateButton.disabled = categories.length === 0;
     elements.generateButton.classList.remove("is-generating");
   }
+}
+
+function resetResult() {
+  elements.resultList.innerHTML = `
+    <div class="empty-state">
+      <span class="seed-mark" aria-hidden="true">✦</span>
+      <p>ボタンを押すと、独立したランダム抽選を行います。</p>
+    </div>`;
 }
 
 function renderResult(record) {
@@ -111,8 +170,9 @@ function renderResult(record) {
 }
 
 async function renderHistory() {
+  if (!currentGenerator) return;
   try {
-    historyRecords = await getHistoryOldestFirst();
+    historyRecords = await getHistoryOldestFirst(currentGenerator.id);
     renderHistoryList();
   } catch (error) {
     elements.historyList.textContent = error.message ?? "履歴を読み込めませんでした。";
@@ -189,12 +249,13 @@ function handleHistoryClick(event) {
 }
 
 function clearAllHistory() {
-  if (historyRecords.length === 0) return;
+  if (!currentGenerator || historyRecords.length === 0) return;
+  const generatorId = currentGenerator.id;
   openConfirmation({
     title: "履歴をすべて削除しますか？",
     message: `${historyRecords.length}件の履歴を削除します。この操作は元に戻せません。`,
     action: async () => {
-      await clearHistory();
+      await clearHistory(generatorId);
       historyRecords = [];
       renderHistoryList();
     },
@@ -240,9 +301,15 @@ function normalizeSearchText(text) {
   return text.normalize("NFKC").trim().toLowerCase();
 }
 
+function historySortStorageKey() {
+  return currentGenerator?.id === "scene"
+    ? HISTORY_SORT_STORAGE_KEY
+    : `${HISTORY_SORT_STORAGE_KEY}:${currentGenerator?.id ?? "scene"}`;
+}
+
 function restoreHistorySort() {
   try {
-    const savedSort = localStorage.getItem(HISTORY_SORT_STORAGE_KEY);
+    const savedSort = localStorage.getItem(historySortStorageKey());
     elements.historySort.value = savedSort === "oldest" ? "oldest" : "newest";
   } catch {
     elements.historySort.value = "newest";
@@ -251,7 +318,7 @@ function restoreHistorySort() {
 
 function changeHistorySort() {
   try {
-    localStorage.setItem(HISTORY_SORT_STORAGE_KEY, elements.historySort.value);
+    localStorage.setItem(historySortStorageKey(), elements.historySort.value);
   } catch {
     // 保存できない環境でも、現在の画面では選択した並び順を使用する。
   }
@@ -259,6 +326,14 @@ function changeHistorySort() {
 }
 
 function showView(name) {
+  const showingMenu = name === "menu";
+  if (showingMenu && currentGenerator) {
+    loadingSequence += 1;
+    currentGenerator = null;
+    categories = [];
+    historyRecords = [];
+    elements.generateButton.disabled = true;
+  }
   elements.tabs.forEach((tab) => {
     const selected = tab.dataset.view === name;
     tab.classList.toggle("is-active", selected);
@@ -269,7 +344,13 @@ function showView(name) {
     panel.classList.toggle("is-active", selected);
     panel.hidden = !selected;
   });
-  elements.actionFooter.hidden = name !== "generator";
+  elements.tabBar.hidden = showingMenu;
+  elements.menuButton.hidden = showingMenu;
+  elements.actionFooter.hidden = name !== "generator" || !currentGenerator;
+  if (showingMenu) {
+    elements.appEyebrow.textContent = "IDEA SEED";
+    delete document.body.dataset.generator;
+  }
 }
 
 function setMessage(text, isError = false) {

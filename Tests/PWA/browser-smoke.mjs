@@ -38,11 +38,8 @@ function createClient(webSocketUrl) {
     const handlers = pending.get(message.id);
     if (!handlers) return;
     pending.delete(message.id);
-    if (message.error) {
-      handlers.reject(new Error(message.error.message));
-    } else {
-      handlers.resolve(message.result);
-    }
+    if (message.error) handlers.reject(new Error(message.error.message));
+    else handlers.resolve(message.result);
   });
 
   return {
@@ -75,11 +72,7 @@ async function evaluate(client, expression) {
         awaitPromise: true,
         returnByValue: true,
       });
-
-      if (result.exceptionDetails) {
-        throw new Error(result.exceptionDetails.text);
-      }
-
+      if (result.exceptionDetails) throw new Error(result.exceptionDetails.text);
       return result.result.value;
     } catch (error) {
       lastError = error;
@@ -88,6 +81,64 @@ async function evaluate(client, expression) {
     }
   }
   throw lastError;
+}
+
+async function chooseGenerator(client, generatorId) {
+  return evaluate(
+    client,
+    `new Promise((resolve) => {
+      document.querySelector('[data-generator-id="${generatorId}"]').click();
+      const deadline = Date.now() + 10000;
+      const tick = () => {
+        const ready = document.body.dataset.generator === "${generatorId}"
+          && document.querySelector("#generate-button")?.disabled === false;
+        if (ready || Date.now() > deadline) {
+          resolve({
+            ready,
+            message: document.querySelector("#generator-message")?.textContent?.trim(),
+            footerVisible: !document.querySelector(".action-footer")?.hidden,
+          });
+          return;
+        }
+        setTimeout(tick, 100);
+      };
+      tick();
+    })`,
+  );
+}
+
+async function clearCurrentHistory(client) {
+  return evaluate(
+    client,
+    `new Promise((resolve) => {
+      document.querySelector('[data-view="history"]').click();
+      const clearButton = document.querySelector("#clear-history-button");
+      if (!clearButton.disabled) {
+        clearButton.click();
+        document.querySelector("#confirm-delete-button").click();
+      }
+      setTimeout(() => {
+        const count = document.querySelector("#history-count")?.textContent?.trim();
+        document.querySelector('[data-view="generator"]').click();
+        resolve(count);
+      }, 300);
+    })`,
+  );
+}
+
+async function generate(client) {
+  return evaluate(
+    client,
+    `new Promise((resolve) => {
+      document.querySelector("#generate-button").click();
+      setTimeout(() => resolve({
+        cards: document.querySelectorAll(".result-card").length,
+        historyCount: document.querySelector("#history-count")?.textContent?.trim(),
+        labels: [...document.querySelectorAll(".result-card .category-label")].map((element) => element.textContent.trim()),
+        cardAnimation: getComputedStyle(document.querySelector(".result-card")).animationName,
+      }), 500);
+    })`,
+  );
 }
 
 async function main() {
@@ -105,19 +156,21 @@ async function main() {
   });
   await client.send("Emulation.setTouchEmulationEnabled", { enabled: true, maxTouchPoints: 5 });
 
-  const loaded = await evaluate(
+  const menu = await evaluate(
     client,
     `new Promise((resolve) => {
       const deadline = Date.now() + 10000;
       const tick = () => {
-        const disabled = document.querySelector("#generate-button")?.disabled;
-        const message = document.querySelector("#generator-message")?.textContent?.trim();
-        if (disabled === false) {
-          resolve({ disabled, message });
-          return;
-        }
-        if (Date.now() > deadline) {
-          resolve({ disabled, message });
+        const cards = document.querySelectorAll("[data-generator-id]").length;
+        const appReady = document.body.dataset.appReady === "true";
+        if ((cards === 2 && appReady) || Date.now() > deadline) {
+          resolve({
+            cards,
+            appReady,
+            menuVisible: !document.querySelector("#menu-view")?.hidden,
+            tabsHidden: document.querySelector(".tab-bar")?.hidden,
+            footerHidden: document.querySelector(".action-footer")?.hidden,
+          });
           return;
         }
         setTimeout(tick, 100);
@@ -125,95 +178,80 @@ async function main() {
       tick();
     })`,
   );
-  assert.equal(loaded.disabled, false);
+  assert.deepEqual(menu, { cards: 2, appReady: true, menuVisible: true, tabsHidden: true, footerHidden: true });
 
-  const initialHistoryCount = await evaluate(
+  const sceneReady = await chooseGenerator(client, "scene");
+  assert.equal(sceneReady.ready, true, sceneReady.message);
+  assert.equal(sceneReady.footerVisible, true);
+  assert.equal(await clearCurrentHistory(client), "0件");
+
+  const firstScene = await generate(client);
+  assert.equal(firstScene.cards, 4);
+  assert.equal(firstScene.historyCount, "1件");
+  assert.deepEqual(firstScene.labels, ["いつ", "どこで", "誰が", "何をした"]);
+  assert.equal(firstScene.cardAnimation, "card-reveal");
+  await generate(client);
+
+  const sceneHistory = await evaluate(
     client,
     `new Promise((resolve) => {
       document.querySelector('[data-view="history"]').click();
-      const clearButton = document.querySelector("#clear-history-button");
-      if (!clearButton.disabled) {
-        clearButton.click();
-        document.querySelector("#confirm-delete-button").click();
-      }
-      setTimeout(() => {
-        document.querySelector('[data-view="generator"]').click();
-        resolve(document.querySelector("#history-count")?.textContent?.trim());
-      }, 300);
+      document.querySelector("#history-sort").value = "oldest";
+      document.querySelector("#history-sort").dispatchEvent(new Event("change", { bubbles: true }));
+      setTimeout(() => resolve({
+        count: document.querySelector("#history-count")?.textContent?.trim(),
+        savedSort: localStorage.getItem("idea-seed-history-sort"),
+        footerHidden: document.querySelector(".action-footer")?.hidden,
+      }), 200);
     })`,
   );
-  assert.equal(initialHistoryCount, "0件");
+  assert.deepEqual(sceneHistory, { count: "2件", savedSort: "oldest", footerHidden: true });
 
-  const generated = await evaluate(
+  await evaluate(client, `document.querySelector("#menu-button").click()`);
+  const loglineReady = await chooseGenerator(client, "logline");
+  assert.equal(loglineReady.ready, true, loglineReady.message);
+  assert.equal(await clearCurrentHistory(client), "0件");
+
+  const logline = await generate(client);
+  assert.equal(logline.cards, 6);
+  assert.equal(logline.historyCount, "1件");
+  assert.deepEqual(logline.labels, ["主人公", "欲望", "日常の入口", "異常現象・世界ルール", "舞台", "スケール"]);
+
+  const loglineHistory = await evaluate(
     client,
     `new Promise((resolve) => {
-      document.querySelector("#generate-button").click();
-      setTimeout(() => {
-        resolve({
-          cards: document.querySelectorAll(".result-card").length,
-          historyCount: document.querySelector("#history-count")?.textContent?.trim(),
-          cardAnimation: getComputedStyle(document.querySelector(".result-card")).animationName,
-        });
-      }, 500);
+      document.querySelector('[data-view="history"]').click();
+      setTimeout(() => resolve({
+        count: document.querySelector("#history-count")?.textContent?.trim(),
+        title: document.querySelector("#history-title")?.textContent?.trim(),
+      }), 200);
     })`,
   );
-  assert.equal(generated.cards, 4);
-  assert.equal(generated.historyCount, "1件");
-  assert.equal(generated.cardAnimation, "card-reveal");
+  assert.deepEqual(loglineHistory, { count: "1件", title: "ログライン生成の履歴" });
 
-  const historyTools = await evaluate(
+  await evaluate(client, `document.querySelector("#menu-button").click()`);
+  assert.equal((await chooseGenerator(client, "scene")).ready, true);
+  const separatedSceneHistory = await evaluate(
     client,
     `new Promise((resolve) => {
-      document.querySelector("#generate-button").click();
-      setTimeout(() => {
-        document.querySelector('[data-view="history"]').click();
-        const firstValue = document.querySelector(".history-card dd")?.textContent?.trim() ?? "";
-        document.querySelector("#history-search").value = firstValue;
-        document.querySelector("#history-search").dispatchEvent(new Event("input", { bubbles: true }));
-        document.querySelector("#history-sort").value = "oldest";
-        document.querySelector("#history-sort").dispatchEvent(new Event("change", { bubbles: true }));
-        setTimeout(() => {
-          resolve({
-            footerHidden: document.querySelector(".action-footer").hidden,
-            searchCount: document.querySelector("#history-count")?.textContent?.trim(),
-            sortValue: document.querySelector("#history-sort")?.value,
-            savedSortValue: localStorage.getItem("idea-seed-history-sort"),
-            deleteButtons: document.querySelectorAll("[data-delete-history-id]").length,
-          });
-        }, 300);
-      }, 500);
+      document.querySelector('[data-view="history"]').click();
+      setTimeout(() => resolve(document.querySelector("#history-count")?.textContent?.trim()), 200);
     })`,
   );
-  assert.equal(historyTools.footerHidden, true);
-  assert.match(historyTools.searchCount, /^\d+\/2件$/);
-  assert.equal(historyTools.sortValue, "oldest");
-  assert.equal(historyTools.savedSortValue, "oldest");
-  assert.equal(historyTools.deleteButtons >= 1, true);
+  assert.equal(separatedSceneHistory, "2件");
 
   await client.send("Page.reload", { ignoreCache: true });
   await delay(500);
-  const restoredSortValue = await evaluate(
-    client,
-    `new Promise((resolve) => {
-      const deadline = Date.now() + 10000;
-      const tick = () => {
-        const sortValue = document.querySelector("#history-sort")?.value;
-        const ready = document.querySelector("#generate-button")?.disabled === false;
-        if (ready || Date.now() > deadline) {
-          document.querySelector('[data-view="history"]')?.click();
-          resolve(sortValue);
-          return;
-        }
-        setTimeout(tick, 100);
-      };
-      tick();
-    })`,
-  );
-  assert.equal(restoredSortValue, "oldest");
+  const afterReloadMenu = await evaluate(client, `!document.querySelector("#menu-view")?.hidden`);
+  assert.equal(afterReloadMenu, true);
+  assert.equal((await chooseGenerator(client, "scene")).ready, true);
+  const restoredSort = await evaluate(client, `document.querySelector("#history-sort")?.value`);
+  assert.equal(restoredSort, "oldest");
 
-  const deletedOne = await evaluate(
+  const deletion = await evaluate(
     client,
     `new Promise((resolve) => {
+      document.querySelector('[data-view="history"]').click();
       document.querySelector("[data-delete-history-id]").click();
       const dialogOpened = document.querySelector("#confirm-dialog").open;
       const dialogAnimation = getComputedStyle(document.querySelector(".confirm-dialog-content")).animationName;
@@ -226,29 +264,14 @@ async function main() {
       }), 300);
     })`,
   );
-  assert.match(deletedOne.count, /^(0|1)\/1件$|^1件$/);
-  assert.equal(deletedOne.dialogOpened, true);
-  assert.equal(deletedOne.dialogAnimation, "modal-in");
-  assert.equal(deletedOne.dialogClosed, true);
+  assert.deepEqual(deletion, {
+    count: "1件",
+    dialogOpened: true,
+    dialogAnimation: "modal-in",
+    dialogClosed: true,
+  });
 
-  const cleared = await evaluate(
-    client,
-    `new Promise((resolve) => {
-      document.querySelector("#history-search").value = "";
-      document.querySelector("#history-search").dispatchEvent(new Event("input", { bubbles: true }));
-      document.querySelector("#clear-history-button").click();
-      const dialogOpened = document.querySelector("#confirm-dialog").open;
-      document.querySelector("#confirm-delete-button").click();
-      setTimeout(() => {
-        resolve({
-          count: document.querySelector("#history-count")?.textContent?.trim(),
-          empty: document.querySelector("#history-list")?.textContent?.includes("生成履歴はまだありません。"),
-          dialogOpened,
-        });
-      }, 300);
-    })`,
-  );
-  assert.deepEqual(cleared, { count: "0件", empty: true, dialogOpened: true });
+  assert.equal(await clearCurrentHistory(client), "0件");
 
   client.close();
 }

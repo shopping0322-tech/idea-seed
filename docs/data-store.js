@@ -40,34 +40,39 @@ function openDatabase() {
   return databasePromise;
 }
 
-export async function getDatasetSnapshot() {
+export async function getDatasetSnapshot(datasetId = "scene") {
   const database = await openDatabase();
   const transaction = database.transaction(["meta", "categories"], "readonly");
   const done = transactionDone(transaction);
-  const manifestRequest = transaction.objectStore("meta").get("manifest");
+  const manifestRequest = transaction.objectStore("meta").get(`manifest:${datasetId}`);
+  const legacyManifestRequest = datasetId === "scene" ? transaction.objectStore("meta").get("manifest") : null;
   const categoriesRequest = transaction.objectStore("categories").getAll();
-  const [manifestRecord, categories] = await Promise.all([
+  const [manifestRecord, legacyManifestRecord, allCategories] = await Promise.all([
     requestAsPromise(manifestRequest),
+    legacyManifestRequest ? requestAsPromise(legacyManifestRequest) : null,
     requestAsPromise(categoriesRequest),
   ]);
   await done;
   return {
-    manifest: manifestRecord?.value ?? null,
-    categories: categories.sort((a, b) => a.order - b.order || a.id.localeCompare(b.id)),
+    manifest: manifestRecord?.value ?? legacyManifestRecord?.value ?? null,
+    categories: allCategories
+      .filter((category) => (category.datasetId ?? "scene") === datasetId)
+      .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id)),
   };
 }
 
-export async function installDataset(manifest, preparedCategories) {
+export async function installDataset(datasetId, manifest, preparedCategories) {
   const database = await openDatabase();
   const transaction = database.transaction(["meta", "categories", "chunks"], "readwrite");
   const done = transactionDone(transaction);
   const categoryStore = transaction.objectStore("categories");
   const chunkStore = transaction.objectStore("chunks");
   const existing = await requestAsPromise(categoryStore.getAll());
-  const existingById = new Map(existing.map((category) => [category.id, category]));
-  const incomingIds = new Set(manifest.categories.map((category) => category.id));
+  const datasetCategories = existing.filter((category) => (category.datasetId ?? "scene") === datasetId);
+  const existingById = new Map(datasetCategories.map((category) => [category.categoryId ?? category.id, category]));
+  const incomingIds = new Set(manifest.categories.map((category) => storageCategoryId(datasetId, category.id)));
 
-  for (const category of existing) {
+  for (const category of datasetCategories) {
     if (!incomingIds.has(category.id)) {
       categoryStore.delete(category.id);
       chunkStore.delete(categoryChunkRange(category.id));
@@ -75,14 +80,17 @@ export async function installDataset(manifest, preparedCategories) {
   }
 
   for (const definition of manifest.categories) {
+    const storedId = storageCategoryId(datasetId, definition.id);
     const prepared = preparedCategories.get(definition.id);
     if (prepared) {
-      chunkStore.delete(categoryChunkRange(definition.id));
+      chunkStore.delete(categoryChunkRange(storedId));
       prepared.chunks.forEach((values, index) => {
-        chunkStore.put({ categoryId: definition.id, index, values });
+        chunkStore.put({ categoryId: storedId, index, values });
       });
       categoryStore.put({
-        id: definition.id,
+        id: storedId,
+        categoryId: definition.id,
+        datasetId,
         label: definition.label,
         order: definition.order,
         version: definition.version,
@@ -96,11 +104,18 @@ export async function installDataset(manifest, preparedCategories) {
         transaction.abort();
         throw new Error(`カテゴリデータがありません: ${definition.id}`);
       }
-      categoryStore.put({ ...installed, label: definition.label, order: definition.order, version: definition.version });
+      categoryStore.put({
+        ...installed,
+        categoryId: definition.id,
+        datasetId,
+        label: definition.label,
+        order: definition.order,
+        version: definition.version,
+      });
     }
   }
 
-  transaction.objectStore("meta").put({ key: "manifest", value: manifest });
+  transaction.objectStore("meta").put({ key: `manifest:${datasetId}`, value: manifest });
   await done;
 }
 
@@ -136,21 +151,31 @@ export async function deleteHistory(id) {
   await done;
 }
 
-export async function clearHistory() {
+export async function clearHistory(generatorId = "scene") {
   const database = await openDatabase();
   const transaction = database.transaction("history", "readwrite");
   const done = transactionDone(transaction);
-  transaction.objectStore("history").clear();
+  const store = transaction.objectStore("history");
+  const records = await requestAsPromise(store.getAll());
+  records
+    .filter((record) => (record.generatorId ?? "scene") === generatorId)
+    .forEach((record) => store.delete(record.id));
   await done;
 }
 
-export async function getHistoryOldestFirst() {
+export async function getHistoryOldestFirst(generatorId = "scene") {
   const database = await openDatabase();
   const transaction = database.transaction("history", "readonly");
   const done = transactionDone(transaction);
   const records = await requestAsPromise(transaction.objectStore("history").getAll());
   await done;
-  return records.sort((a, b) => a.createdAt - b.createdAt || a.id.localeCompare(b.id));
+  return records
+    .filter((record) => (record.generatorId ?? "scene") === generatorId)
+    .sort((a, b) => a.createdAt - b.createdAt || a.id.localeCompare(b.id));
+}
+
+function storageCategoryId(datasetId, categoryId) {
+  return datasetId === "scene" ? categoryId : `${datasetId}:${categoryId}`;
 }
 
 function categoryChunkRange(categoryId) {

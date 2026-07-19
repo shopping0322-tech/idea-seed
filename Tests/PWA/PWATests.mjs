@@ -11,6 +11,20 @@ test("production manifest is valid", async () => {
   assert.deepEqual(manifest.categories.map((category) => category.id), ["when", "where", "who", "action"]);
 });
 
+test("logline manifest contains six curated categories", async () => {
+  const manifest = JSON.parse(await readFile(new URL("../../docs/logline/manifest.json", import.meta.url), "utf8"));
+  assert.equal(validateManifest(manifest), manifest);
+  assert.deepEqual(manifest.categories.map((category) => category.id), [
+    "protagonists",
+    "desires",
+    "daily_triggers",
+    "phenomena",
+    "settings",
+    "scales",
+  ]);
+  assert.deepEqual(manifest.categories.map((category) => category.files[0].count), [40, 40, 40, 40, 40, 40]);
+});
+
 test("secure random integer stays inside the requested range", () => {
   for (const maximum of [1, 2, 3, 10, 1_000, 100_000]) {
     for (let attempt = 0; attempt < 200; attempt += 1) {
