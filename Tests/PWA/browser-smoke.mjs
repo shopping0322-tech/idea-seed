@@ -127,6 +127,23 @@ async function main() {
   );
   assert.equal(loaded.disabled, false);
 
+  const initialHistoryCount = await evaluate(
+    client,
+    `new Promise((resolve) => {
+      document.querySelector('[data-view="history"]').click();
+      const clearButton = document.querySelector("#clear-history-button");
+      if (!clearButton.disabled) {
+        clearButton.click();
+        document.querySelector("#confirm-delete-button").click();
+      }
+      setTimeout(() => {
+        document.querySelector('[data-view="generator"]').click();
+        resolve(document.querySelector("#history-count")?.textContent?.trim());
+      }, 300);
+    })`,
+  );
+  assert.equal(initialHistoryCount, "0件");
+
   const generated = await evaluate(
     client,
     `new Promise((resolve) => {
@@ -135,12 +152,14 @@ async function main() {
         resolve({
           cards: document.querySelectorAll(".result-card").length,
           historyCount: document.querySelector("#history-count")?.textContent?.trim(),
+          cardAnimation: getComputedStyle(document.querySelector(".result-card")).animationName,
         });
       }, 500);
     })`,
   );
   assert.equal(generated.cards, 4);
   assert.equal(generated.historyCount, "1件");
+  assert.equal(generated.cardAnimation, "card-reveal");
 
   const historyTools = await evaluate(
     client,
@@ -174,16 +193,19 @@ async function main() {
     `new Promise((resolve) => {
       document.querySelector("[data-delete-history-id]").click();
       const dialogOpened = document.querySelector("#confirm-dialog").open;
+      const dialogAnimation = getComputedStyle(document.querySelector(".confirm-dialog-content")).animationName;
       document.querySelector("#confirm-delete-button").click();
       setTimeout(() => resolve({
         count: document.querySelector("#history-count")?.textContent?.trim(),
         dialogOpened,
+        dialogAnimation,
         dialogClosed: !document.querySelector("#confirm-dialog").open,
       }), 300);
     })`,
   );
   assert.match(deletedOne.count, /^(0|1)\/1件$|^1件$/);
   assert.equal(deletedOne.dialogOpened, true);
+  assert.equal(deletedOne.dialogAnimation, "modal-in");
   assert.equal(deletedOne.dialogClosed, true);
 
   const cleared = await evaluate(

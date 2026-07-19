@@ -62,6 +62,7 @@ async function generate() {
   if (generating || categories.length === 0) return;
   generating = true;
   elements.generateButton.disabled = true;
+  elements.generateButton.classList.add("is-generating");
   setMessage("");
   try {
     const items = await Promise.all(categories.map(async (category) => {
@@ -86,13 +87,15 @@ async function generate() {
   } finally {
     generating = false;
     elements.generateButton.disabled = false;
+    elements.generateButton.classList.remove("is-generating");
   }
 }
 
 function renderResult(record) {
-  elements.resultList.replaceChildren(...record.items.map((item) => {
+  elements.resultList.replaceChildren(...record.items.map((item, index) => {
     const card = document.createElement("article");
     card.className = "result-card";
+    card.style.setProperty("--reveal-index", index);
     const label = document.createElement("p");
     label.className = "category-label";
     label.textContent = item.categoryLabel;
