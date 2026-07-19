@@ -306,6 +306,21 @@ async function main() {
 
   assert.equal(await clearCurrentHistory(client), "0件");
 
+  const desktopButtonWidths = [];
+  for (const width of [900, 1440]) {
+    await client.send("Emulation.setDeviceMetricsOverride", {
+      width,
+      height: 900,
+      deviceScaleFactor: 1,
+      mobile: false,
+    });
+    desktopButtonWidths.push(await evaluate(
+      client,
+      `Math.round(document.querySelector("#generate-button").getBoundingClientRect().width)`,
+    ));
+  }
+  assert.deepEqual(desktopButtonWidths, [680, 680]);
+
   client.close();
 }
 

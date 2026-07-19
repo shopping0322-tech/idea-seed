@@ -165,10 +165,11 @@ function animateScreenIn(direction) {
     return;
   }
   const offset = direction === "forward" ? "22px" : "-22px";
-  elements.appShell.animate([
+  const animation = elements.appShell.animate([
     { opacity: 0, transform: `translateX(${offset}) scale(0.992)` },
     { opacity: 1, transform: "translateX(0) scale(1)" },
   ], { duration: 300, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)", fill: "both" });
+  animation.finished.then(() => animation.cancel()).catch(() => {});
 }
 
 function cancelScreenAnimations() {
