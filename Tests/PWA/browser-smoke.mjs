@@ -97,6 +97,13 @@ async function main() {
   await client.ready();
   await client.send("Runtime.enable");
   await client.send("Page.enable");
+  await client.send("Emulation.setDeviceMetricsOverride", {
+    width: 390,
+    height: 844,
+    deviceScaleFactor: 3,
+    mobile: true,
+  });
+  await client.send("Emulation.setTouchEmulationEnabled", { enabled: true, maxTouchPoints: 5 });
 
   const loaded = await evaluate(
     client,
