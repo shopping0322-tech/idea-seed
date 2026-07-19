@@ -3,7 +3,6 @@ import { addHistory, clearHistory, deleteHistory, getEntryAt, getHistoryOldestFi
 import { secureRandomInteger } from "./random.js";
 
 const elements = {
-  connectionStatus: document.querySelector("#connection-status"),
   generateButton: document.querySelector("#generate-button"),
   generatorMessage: document.querySelector("#generator-message"),
   actionFooter: document.querySelector(".action-footer"),
@@ -26,22 +25,16 @@ start();
 async function start() {
   bindEvents();
   registerServiceWorker();
-  updateConnectionIndicator();
   try {
     const dataset = await loadDataset();
     categories = dataset.categories;
     elements.generateButton.disabled = false;
     if (dataset.source === "updated") {
-      setStatus(`更新済み ${dataset.updatedCategoryCount}カテゴリ`, "online");
       setMessage("最新データを保存しました。次回からオフラインでも利用できます。");
     } else if (dataset.source === "offline") {
-      setStatus("オフライン", "error");
       setMessage("保存済みデータを使用しています。");
-    } else {
-      setStatus("準備完了", "online");
     }
   } catch (error) {
-    setStatus("読込失敗", "error");
     setMessage(error.message ?? "データを読み込めませんでした。", true);
   }
   await renderHistory();
@@ -54,8 +47,6 @@ function bindEvents() {
   elements.clearHistoryButton.addEventListener("click", clearAllHistory);
   elements.historyList.addEventListener("click", handleHistoryClick);
   elements.tabs.forEach((tab) => tab.addEventListener("click", () => showView(tab.dataset.view)));
-  window.addEventListener("online", updateConnectionIndicator);
-  window.addEventListener("offline", updateConnectionIndicator);
 }
 
 async function generate() {
@@ -220,16 +211,6 @@ function showView(name) {
     panel.hidden = !selected;
   });
   elements.actionFooter.hidden = name !== "generator";
-}
-
-function updateConnectionIndicator() {
-  if (!navigator.onLine) setStatus("オフライン", "error");
-}
-
-function setStatus(text, state = "") {
-  elements.connectionStatus.textContent = text;
-  elements.connectionStatus.classList.toggle("is-online", state === "online");
-  elements.connectionStatus.classList.toggle("is-error", state === "error");
 }
 
 function setMessage(text, isError = false) {

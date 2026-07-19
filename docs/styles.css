@@ -61,7 +61,6 @@ h1, h2, p { margin-top: 0; }
 h1 { margin-bottom: 0; font-size: clamp(2rem, 9vw, 3.4rem); letter-spacing: -0.06em; }
 h2 { margin-bottom: 0; font-size: 1.65rem; letter-spacing: -0.04em; }
 
-.status-pill,
 .count-badge {
   flex: 0 0 auto;
   padding: 7px 11px;
@@ -72,9 +71,6 @@ h2 { margin-bottom: 0; font-size: 1.65rem; letter-spacing: -0.04em; }
   font-size: 0.72rem;
   font-weight: 700;
 }
-
-.status-pill.is-online { color: var(--accent); }
-.status-pill.is-error { color: var(--danger); }
 
 .tab-bar {
   display: grid;
