@@ -9,6 +9,8 @@
   --accent: #81d8d0;
   --accent-ink: #0b2526;
   --danger: #ff8a86;
+  --delete: #b7c8c6;
+  --delete-ink: #132021;
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
@@ -234,7 +236,7 @@ h2 { margin-bottom: 0; font-size: 1.65rem; letter-spacing: -0.04em; }
   cursor: pointer;
 }
 
-.danger-button { color: var(--danger); }
+.danger-button { color: var(--delete); }
 .ghost-button:disabled { cursor: default; opacity: 0.42; }
 
 .history-card {
@@ -272,7 +274,7 @@ h2 { margin-bottom: 0; font-size: 1.65rem; letter-spacing: -0.04em; }
   transition: color 160ms ease, background 160ms ease, transform 160ms ease;
 }
 
-.history-delete-button:active { color: var(--danger); background: rgba(255, 255, 255, 0.08); transform: scale(0.9); }
+.history-delete-button:active { color: var(--delete); background: rgba(255, 255, 255, 0.08); transform: scale(0.9); }
 .history-delete-button:disabled { cursor: default; opacity: 0.45; }
 
 .confirm-dialog {
@@ -317,9 +319,9 @@ h2 { margin-bottom: 0; font-size: 1.65rem; letter-spacing: -0.04em; }
 .modal-button:active { transform: scale(0.97); }
 
 .modal-delete-button {
-  border-color: rgba(255, 138, 134, 0.35);
-  color: #27100f;
-  background: var(--danger);
+  border-color: color-mix(in srgb, var(--delete) 42%, transparent);
+  color: var(--delete-ink);
+  background: var(--delete);
 }
 
 .modal-button:disabled { cursor: wait; opacity: 0.5; }
