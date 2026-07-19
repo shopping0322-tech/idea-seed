@@ -2,6 +2,8 @@ import { loadDataset } from "./data-service.js";
 import { addHistory, clearHistory, deleteHistory, getEntryAt, getHistoryOldestFirst } from "./data-store.js";
 import { secureRandomInteger } from "./random.js";
 
+const HISTORY_SORT_STORAGE_KEY = "idea-seed-history-sort";
+
 const elements = {
   generateButton: document.querySelector("#generate-button"),
   generatorMessage: document.querySelector("#generator-message"),
@@ -29,6 +31,7 @@ let pendingDeleteAction = null;
 start();
 
 async function start() {
+  restoreHistorySort();
   bindEvents();
   registerServiceWorker();
   try {
@@ -49,7 +52,7 @@ async function start() {
 function bindEvents() {
   elements.generateButton.addEventListener("click", generate);
   elements.historySearch.addEventListener("input", renderHistoryList);
-  elements.historySort.addEventListener("change", renderHistoryList);
+  elements.historySort.addEventListener("change", changeHistorySort);
   elements.clearHistoryButton.addEventListener("click", clearAllHistory);
   elements.historyList.addEventListener("click", handleHistoryClick);
   elements.confirmCancelButton.addEventListener("click", () => elements.confirmDialog.close());
@@ -235,6 +238,24 @@ function historySearchText(record) {
 
 function normalizeSearchText(text) {
   return text.normalize("NFKC").trim().toLowerCase();
+}
+
+function restoreHistorySort() {
+  try {
+    const savedSort = localStorage.getItem(HISTORY_SORT_STORAGE_KEY);
+    elements.historySort.value = savedSort === "oldest" ? "oldest" : "newest";
+  } catch {
+    elements.historySort.value = "newest";
+  }
+}
+
+function changeHistorySort() {
+  try {
+    localStorage.setItem(HISTORY_SORT_STORAGE_KEY, elements.historySort.value);
+  } catch {
+    // 保存できない環境でも、現在の画面では選択した並び順を使用する。
+  }
+  renderHistoryList();
 }
 
 function showView(name) {

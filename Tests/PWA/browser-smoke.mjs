@@ -170,13 +170,14 @@ async function main() {
         const firstValue = document.querySelector(".history-card dd")?.textContent?.trim() ?? "";
         document.querySelector("#history-search").value = firstValue;
         document.querySelector("#history-search").dispatchEvent(new Event("input", { bubbles: true }));
-        document.querySelector("#history-sort").value = "newest";
+        document.querySelector("#history-sort").value = "oldest";
         document.querySelector("#history-sort").dispatchEvent(new Event("change", { bubbles: true }));
         setTimeout(() => {
           resolve({
             footerHidden: document.querySelector(".action-footer").hidden,
             searchCount: document.querySelector("#history-count")?.textContent?.trim(),
             sortValue: document.querySelector("#history-sort")?.value,
+            savedSortValue: localStorage.getItem("idea-seed-history-sort"),
             deleteButtons: document.querySelectorAll("[data-delete-history-id]").length,
           });
         }, 300);
@@ -185,8 +186,30 @@ async function main() {
   );
   assert.equal(historyTools.footerHidden, true);
   assert.match(historyTools.searchCount, /^\d+\/2件$/);
-  assert.equal(historyTools.sortValue, "newest");
+  assert.equal(historyTools.sortValue, "oldest");
+  assert.equal(historyTools.savedSortValue, "oldest");
   assert.equal(historyTools.deleteButtons >= 1, true);
+
+  await client.send("Page.reload", { ignoreCache: true });
+  await delay(500);
+  const restoredSortValue = await evaluate(
+    client,
+    `new Promise((resolve) => {
+      const deadline = Date.now() + 10000;
+      const tick = () => {
+        const sortValue = document.querySelector("#history-sort")?.value;
+        const ready = document.querySelector("#generate-button")?.disabled === false;
+        if (ready || Date.now() > deadline) {
+          document.querySelector('[data-view="history"]')?.click();
+          resolve(sortValue);
+          return;
+        }
+        setTimeout(tick, 100);
+      };
+      tick();
+    })`,
+  );
+  assert.equal(restoredSortValue, "oldest");
 
   const deletedOne = await evaluate(
     client,
