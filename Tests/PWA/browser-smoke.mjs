@@ -183,6 +183,14 @@ async function main() {
             documentWidth: document.documentElement.scrollWidth,
             cardsInsideViewport: [...document.querySelectorAll(".generator-menu-card")]
               .every((card) => card.getBoundingClientRect().right <= window.innerWidth),
+            cardsNearlySquare: [...document.querySelectorAll(".generator-menu-card")]
+              .every((card) => {
+                const bounds = card.getBoundingClientRect();
+                return Math.abs(bounds.width / bounds.height - 1) < 0.12;
+              }),
+            cardContentFits: [...document.querySelectorAll(".generator-menu-card")]
+              .every((card) => card.scrollWidth <= card.clientWidth && card.scrollHeight <= card.clientHeight),
+            menuHeadingAbsent: document.querySelector(".menu-heading") === null,
             lineIcons: document.querySelectorAll(".menu-card-icon svg").length,
           });
           return;
@@ -202,6 +210,9 @@ async function main() {
     viewportWidth: 390,
     documentWidth: 390,
     cardsInsideViewport: true,
+    cardsNearlySquare: true,
+    cardContentFits: true,
+    menuHeadingAbsent: true,
     lineIcons: 2,
   });
 
@@ -219,6 +230,18 @@ async function main() {
   assert.equal(firstScene.historyCount, "1件");
   assert.deepEqual(firstScene.labels, ["いつ", "どこで", "誰が", "何をした"]);
   assert.equal(firstScene.cardAnimation, "card-reveal");
+  const favoriteResult = await evaluate(
+    client,
+    `new Promise((resolve) => {
+      document.querySelector("#result-favorite-button").click();
+      setTimeout(() => resolve({
+        pressed: document.querySelector("#result-favorite-button").getAttribute("aria-pressed"),
+        symbol: document.querySelector("#result-favorite-button .favorite-symbol")?.textContent,
+        favoriteCount: document.querySelector("#favorite-count")?.textContent?.trim(),
+      }), 200);
+    })`,
+  );
+  assert.deepEqual(favoriteResult, { pressed: "true", symbol: "★", favoriteCount: "1" });
   await generate(client);
 
   const sceneHistory = await evaluate(
@@ -235,6 +258,37 @@ async function main() {
     })`,
   );
   assert.deepEqual(sceneHistory, { count: "2件", savedSort: "oldest", footerHidden: true });
+
+  const favoriteFilter = await evaluate(
+    client,
+    `new Promise((resolve) => {
+      document.querySelector('[data-history-filter="favorites"]').click();
+      setTimeout(() => resolve({
+        cards: document.querySelectorAll(".history-card").length,
+        selected: document.querySelector('[data-history-filter="favorites"]').getAttribute("aria-pressed"),
+        favoriteButtons: document.querySelectorAll(".history-favorite-button.is-favorite").length,
+      }), 100);
+    })`,
+  );
+  assert.deepEqual(favoriteFilter, { cards: 1, selected: "true", favoriteButtons: 1 });
+
+  const protectedClear = await evaluate(
+    client,
+    `new Promise((resolve) => {
+      document.querySelector('[data-history-filter="all"]').click();
+      document.querySelector("#clear-history-button").click();
+      const optionVisible = !document.querySelector("#confirm-favorites-option").hidden;
+      document.querySelector("#confirm-delete-button").click();
+      setTimeout(() => resolve({
+        count: document.querySelector("#history-count")?.textContent?.trim(),
+        cards: document.querySelectorAll(".history-card").length,
+        optionVisible,
+      }), 250);
+    })`,
+  );
+  assert.deepEqual(protectedClear, { count: "1件", cards: 1, optionVisible: true });
+  await evaluate(client, `document.querySelector('[data-view="generator"]').click()`);
+  await generate(client);
 
   await evaluate(client, `document.querySelector("#menu-button").click()`);
   const loglineReady = await chooseGenerator(client, "logline");
@@ -281,6 +335,18 @@ async function main() {
   const restoredSort = await evaluate(client, `document.querySelector("#history-sort")?.value`);
   assert.equal(restoredSort, "oldest");
 
+  const restoredFavorite = await evaluate(
+    client,
+    `new Promise((resolve) => {
+      document.querySelector('[data-view="history"]').click();
+      setTimeout(() => resolve({
+        favoriteCount: document.querySelector("#favorite-count")?.textContent?.trim(),
+        favoriteCards: document.querySelectorAll(".history-favorite-button.is-favorite").length,
+      }), 100);
+    })`,
+  );
+  assert.deepEqual(restoredFavorite, { favoriteCount: "1", favoriteCards: 1 });
+
   const deletion = await evaluate(
     client,
     `new Promise((resolve) => {
@@ -305,8 +371,10 @@ async function main() {
   });
 
   assert.equal(await clearCurrentHistory(client), "0件");
+  await generate(client);
 
   const desktopButtonWidths = [];
+  const desktopResultColumns = [];
   for (const width of [900, 1440]) {
     await client.send("Emulation.setDeviceMetricsOverride", {
       width,
@@ -318,8 +386,13 @@ async function main() {
       client,
       `Math.round(document.querySelector("#generate-button").getBoundingClientRect().width)`,
     ));
+    desktopResultColumns.push(await evaluate(
+      client,
+      `new Set([...document.querySelectorAll(".result-card")].map((card) => Math.round(card.getBoundingClientRect().left))).size`,
+    ));
   }
   assert.deepEqual(desktopButtonWidths, [680, 680]);
+  assert.deepEqual(desktopResultColumns, [1, 1]);
 
   client.close();
 }

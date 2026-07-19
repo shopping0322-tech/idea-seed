@@ -49,10 +49,7 @@
 
     <main>
       <section id="menu-view" class="view-panel is-active" aria-labelledby="menu-title">
-        <div class="menu-heading">
-          <h2 id="menu-title">どこから考える？</h2>
-          <p>考えたいものに合わせて、発想の入口を選ぶ。</p>
-        </div>
+        <h2 id="menu-title" class="visually-hidden">生成メニュー</h2>
         <div class="generator-menu">
           <button class="generator-menu-card" type="button" data-generator-id="scene">
             <span class="menu-card-icon" aria-hidden="true">
@@ -87,6 +84,12 @@
 
       <section id="generator-view" class="view-panel" aria-labelledby="generator-title" hidden>
         <h2 id="generator-title" class="visually-hidden">生成結果</h2>
+        <div id="result-actions" class="result-actions" hidden>
+          <button id="result-favorite-button" class="favorite-action-button" type="button" aria-pressed="false">
+            <span class="favorite-symbol" aria-hidden="true">☆</span>
+            <span class="favorite-label">お気に入り</span>
+          </button>
+        </div>
         <div id="result-list" class="result-list" aria-live="polite">
           <div class="empty-state">
             <span class="seed-mark" aria-hidden="true">✦</span>
@@ -97,6 +100,12 @@
       </section>
 
       <section id="history-view" class="view-panel" aria-label="履歴" hidden>
+        <div class="history-filter" role="group" aria-label="履歴の表示範囲">
+          <button class="history-filter-button is-active" type="button" data-history-filter="all" aria-pressed="true">すべて</button>
+          <button class="history-filter-button" type="button" data-history-filter="favorites" aria-pressed="false">
+            <span aria-hidden="true">★</span> お気に入り <span id="favorite-count" class="filter-count">0</span>
+          </button>
+        </div>
         <div class="history-tools" aria-label="履歴操作">
           <label class="search-field">
             <span class="visually-hidden">履歴検索</span>
@@ -126,6 +135,10 @@
     <div class="confirm-dialog-content">
       <h2 id="confirm-dialog-title">削除しますか？</h2>
       <p id="confirm-dialog-message"></p>
+      <label id="confirm-favorites-option" class="confirm-option" hidden>
+        <input id="confirm-include-favorites" type="checkbox">
+        <span>お気に入りも含めて削除する</span>
+      </label>
       <div class="confirm-dialog-actions">
         <button id="confirm-cancel-button" class="modal-button" type="button">キャンセル</button>
         <button id="confirm-delete-button" class="modal-button modal-delete-button" type="button">削除</button>

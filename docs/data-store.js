@@ -151,14 +151,17 @@ export async function deleteHistory(id) {
   await done;
 }
 
-export async function clearHistory(generatorId = "scene") {
+export async function clearHistory(generatorId = "scene", { includeFavorites = true } = {}) {
   const database = await openDatabase();
   const transaction = database.transaction("history", "readwrite");
   const done = transactionDone(transaction);
   const store = transaction.objectStore("history");
   const records = await requestAsPromise(store.getAll());
   records
-    .filter((record) => (record.generatorId ?? "scene") === generatorId)
+    .filter((record) => (
+      (record.generatorId ?? "scene") === generatorId
+      && (includeFavorites || record.isFavorite !== true)
+    ))
     .forEach((record) => store.delete(record.id));
   await done;
 }

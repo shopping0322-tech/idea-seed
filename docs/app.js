@@ -32,15 +32,21 @@ const elements = {
   generateLabel: document.querySelector(".generate-label"),
   generatorMessage: document.querySelector("#generator-message"),
   actionFooter: document.querySelector(".action-footer"),
+  resultActions: document.querySelector("#result-actions"),
+  resultFavoriteButton: document.querySelector("#result-favorite-button"),
   resultList: document.querySelector("#result-list"),
   historyList: document.querySelector("#history-list"),
   historyCount: document.querySelector("#history-count"),
   historySearch: document.querySelector("#history-search"),
   historySort: document.querySelector("#history-sort"),
+  historyFilters: [...document.querySelectorAll("[data-history-filter]")],
+  favoriteCount: document.querySelector("#favorite-count"),
   clearHistoryButton: document.querySelector("#clear-history-button"),
   confirmDialog: document.querySelector("#confirm-dialog"),
   confirmDialogTitle: document.querySelector("#confirm-dialog-title"),
   confirmDialogMessage: document.querySelector("#confirm-dialog-message"),
+  confirmFavoritesOption: document.querySelector("#confirm-favorites-option"),
+  confirmIncludeFavorites: document.querySelector("#confirm-include-favorites"),
   confirmCancelButton: document.querySelector("#confirm-cancel-button"),
   confirmDeleteButton: document.querySelector("#confirm-delete-button"),
   tabs: [...document.querySelectorAll(".tab-button")],
@@ -53,6 +59,8 @@ let generating = false;
 let transitioning = false;
 let loadingSequence = 0;
 let historyRecords = [];
+let currentResultRecord = null;
+let historyFilter = "all";
 let pendingDeleteAction = null;
 
 start();
@@ -70,10 +78,12 @@ function bindEvents() {
     if (!generating) returnToMenu();
   });
   elements.generateButton.addEventListener("click", generate);
+  elements.resultFavoriteButton.addEventListener("click", () => toggleFavorite(currentResultRecord?.id));
   elements.historySearch.addEventListener("input", renderHistoryList);
   elements.historySort.addEventListener("change", changeHistorySort);
   elements.clearHistoryButton.addEventListener("click", clearAllHistory);
   elements.historyList.addEventListener("click", handleHistoryClick);
+  elements.historyFilters.forEach((button) => button.addEventListener("click", () => changeHistoryFilter(button.dataset.historyFilter)));
   elements.confirmCancelButton.addEventListener("click", () => elements.confirmDialog.close());
   elements.confirmDeleteButton.addEventListener("click", confirmDelete);
   elements.confirmDialog.addEventListener("close", resetConfirmation);
@@ -89,6 +99,8 @@ async function selectGenerator(generatorId, selectedCard) {
   document.body.dataset.generator = generator.id;
   categories = [];
   historyRecords = [];
+  historyFilter = "all";
+  updateHistoryFilterButtons();
   elements.historySearch.value = "";
   restoreHistorySort();
   resetResult();
@@ -200,6 +212,7 @@ async function generate() {
       id: crypto.randomUUID(),
       generatorId: currentGenerator.id,
       createdAt: Date.now(),
+      isFavorite: false,
       items: items.sort((a, b) => a.displayOrder - b.displayOrder),
     };
     await addHistory(record);
@@ -215,6 +228,8 @@ async function generate() {
 }
 
 function resetResult() {
+  currentResultRecord = null;
+  elements.resultActions.hidden = true;
   elements.resultList.innerHTML = `
     <div class="empty-state">
       <span class="seed-mark" aria-hidden="true">✦</span>
@@ -223,6 +238,9 @@ function resetResult() {
 }
 
 function renderResult(record) {
+  currentResultRecord = record;
+  elements.resultActions.hidden = false;
+  updateFavoriteButton(elements.resultFavoriteButton, record.isFavorite === true);
   elements.resultList.replaceChildren(...record.items.map((item, index) => {
     const card = document.createElement("article");
     card.className = "result-card";
@@ -250,7 +268,9 @@ async function renderHistory() {
 
 function renderHistoryList() {
   const query = normalizeSearchText(elements.historySearch.value);
+  const favoriteRecords = historyRecords.filter((record) => record.isFavorite === true);
   const filtered = historyRecords
+    .filter((record) => historyFilter !== "favorites" || record.isFavorite === true)
     .filter((record) => !query || historySearchText(record).includes(query))
     .sort((a, b) => {
       const direction = elements.historySort.value === "newest" ? -1 : 1;
@@ -258,6 +278,7 @@ function renderHistoryList() {
     });
 
   elements.historyCount.textContent = query ? `${filtered.length}/${historyRecords.length}件` : `${historyRecords.length}件`;
+  elements.favoriteCount.textContent = String(favoriteRecords.length);
   elements.clearHistoryButton.disabled = historyRecords.length === 0;
 
   if (historyRecords.length === 0) {
@@ -265,7 +286,10 @@ function renderHistoryList() {
     return;
   }
   if (filtered.length === 0) {
-    elements.historyList.innerHTML = '<div class="empty-state compact"><p>一致する履歴はありません。</p></div>';
+    const message = historyFilter === "favorites" && !query
+      ? "お気に入りはまだありません。"
+      : "一致する履歴はありません。";
+    elements.historyList.innerHTML = `<div class="empty-state compact"><p>${message}</p></div>`;
     return;
   }
   elements.historyList.replaceChildren(...filtered.map(createHistoryCard));
@@ -298,17 +322,28 @@ function createHistoryCard(record) {
   deleteButton.dataset.deleteHistoryId = record.id;
   deleteButton.setAttribute("aria-label", "この履歴を削除");
   deleteButton.textContent = "×";
-  card.append(time, list, deleteButton);
+  const favoriteButton = createFavoriteButton(record);
+  const controls = document.createElement("div");
+  controls.className = "history-card-controls";
+  controls.append(favoriteButton, deleteButton);
+  card.append(time, list, controls);
   return card;
 }
 
 function handleHistoryClick(event) {
+  const favoriteButton = event.target.closest("[data-toggle-favorite-id]");
+  if (favoriteButton) {
+    toggleFavorite(favoriteButton.dataset.toggleFavoriteId);
+    return;
+  }
   const button = event.target.closest("[data-delete-history-id]");
   if (!button) return;
   const historyId = button.dataset.deleteHistoryId;
   openConfirmation({
     title: "この履歴を削除しますか？",
-    message: "削除した履歴は元に戻せません。",
+    message: historyRecords.find((record) => record.id === historyId)?.isFavorite
+      ? "お気に入りに登録した履歴です。削除すると元に戻せません。"
+      : "削除した履歴は元に戻せません。",
     action: async () => {
       await deleteHistory(historyId);
       historyRecords = historyRecords.filter((record) => record.id !== historyId);
@@ -320,21 +355,28 @@ function handleHistoryClick(event) {
 function clearAllHistory() {
   if (!currentGenerator || historyRecords.length === 0) return;
   const generatorId = currentGenerator.id;
+  const favoriteCount = historyRecords.filter((record) => record.isFavorite === true).length;
+  const regularCount = historyRecords.length - favoriteCount;
   openConfirmation({
-    title: "履歴をすべて削除しますか？",
-    message: `${historyRecords.length}件の履歴を削除します。この操作は元に戻せません。`,
-    action: async () => {
-      await clearHistory(generatorId);
-      historyRecords = [];
+    title: "履歴を整理しますか？",
+    message: favoriteCount > 0
+      ? `通常の履歴${regularCount}件を削除します。お気に入り${favoriteCount}件は残ります。`
+      : `${historyRecords.length}件の履歴を削除します。この操作は元に戻せません。`,
+    showFavoritesOption: favoriteCount > 0,
+    action: async ({ includeFavorites }) => {
+      await clearHistory(generatorId, { includeFavorites });
+      historyRecords = historyRecords.filter((record) => record.isFavorite === true && !includeFavorites);
       renderHistoryList();
     },
   });
 }
 
-function openConfirmation({ title, message, action }) {
+function openConfirmation({ title, message, action, showFavoritesOption = false }) {
   pendingDeleteAction = action;
   elements.confirmDialogTitle.textContent = title;
   elements.confirmDialogMessage.textContent = message;
+  elements.confirmFavoritesOption.hidden = !showFavoritesOption;
+  elements.confirmIncludeFavorites.checked = false;
   elements.confirmDeleteButton.disabled = false;
   elements.confirmDialog.showModal();
 }
@@ -343,7 +385,7 @@ async function confirmDelete() {
   if (!pendingDeleteAction) return;
   elements.confirmDeleteButton.disabled = true;
   try {
-    await pendingDeleteAction();
+    await pendingDeleteAction({ includeFavorites: elements.confirmIncludeFavorites.checked });
     elements.confirmDialog.close();
   } catch (error) {
     elements.confirmDeleteButton.disabled = false;
@@ -353,6 +395,8 @@ async function confirmDelete() {
 
 function resetConfirmation() {
   pendingDeleteAction = null;
+  elements.confirmFavoritesOption.hidden = true;
+  elements.confirmIncludeFavorites.checked = false;
   elements.confirmDeleteButton.disabled = false;
 }
 
@@ -394,6 +438,58 @@ function changeHistorySort() {
   renderHistoryList();
 }
 
+function changeHistoryFilter(filter) {
+  historyFilter = filter === "favorites" ? "favorites" : "all";
+  updateHistoryFilterButtons();
+  renderHistoryList();
+}
+
+function updateHistoryFilterButtons() {
+  elements.historyFilters.forEach((button) => {
+    const selected = button.dataset.historyFilter === historyFilter;
+    button.classList.toggle("is-active", selected);
+    button.setAttribute("aria-pressed", String(selected));
+  });
+}
+
+function createFavoriteButton(record) {
+  const button = document.createElement("button");
+  button.className = "history-favorite-button";
+  button.type = "button";
+  button.dataset.toggleFavoriteId = record.id;
+  updateFavoriteButton(button, record.isFavorite === true);
+  return button;
+}
+
+function updateFavoriteButton(button, isFavorite) {
+  button.classList.toggle("is-favorite", isFavorite);
+  button.setAttribute("aria-pressed", String(isFavorite));
+  button.setAttribute("aria-label", isFavorite ? "お気に入りから外す" : "お気に入りに追加");
+  const symbol = button.querySelector(".favorite-symbol");
+  if (symbol) symbol.textContent = isFavorite ? "★" : "☆";
+  else button.textContent = isFavorite ? "★" : "☆";
+}
+
+async function toggleFavorite(historyId) {
+  if (!historyId) return;
+  const record = historyRecords.find((item) => item.id === historyId)
+    ?? (currentResultRecord?.id === historyId ? currentResultRecord : null);
+  if (!record) return;
+  try {
+    const updated = { ...record, isFavorite: record.isFavorite !== true };
+    await addHistory(updated);
+    historyRecords = historyRecords.map((item) => item.id === historyId ? updated : item);
+    if (!historyRecords.some((item) => item.id === historyId)) historyRecords.push(updated);
+    if (currentResultRecord?.id === historyId) {
+      currentResultRecord = updated;
+      updateFavoriteButton(elements.resultFavoriteButton, updated.isFavorite);
+    }
+    renderHistoryList();
+  } catch (error) {
+    setMessage(error.message ?? "お気に入りを保存できませんでした。", true);
+  }
+}
+
 function showView(name) {
   const showingMenu = name === "menu";
   if (showingMenu && currentGenerator) {
@@ -401,6 +497,7 @@ function showView(name) {
     currentGenerator = null;
     categories = [];
     historyRecords = [];
+    currentResultRecord = null;
     elements.generateButton.disabled = true;
   }
   elements.tabs.forEach((tab) => {
