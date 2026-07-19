@@ -1,13 +1,13 @@
 :root {
   color-scheme: dark;
-  --background: #17151f;
-  --surface: #211e2b;
-  --surface-raised: #2a2637;
-  --line: rgba(255, 255, 255, 0.10);
-  --text: #f8f3e8;
-  --muted: #aaa3b7;
-  --accent: #ffcf55;
-  --accent-ink: #211a08;
+  --background: #10191b;
+  --surface: #172326;
+  --surface-raised: #203034;
+  --line: rgba(203, 245, 240, 0.11);
+  --text: #f3faf9;
+  --muted: #9fb3b1;
+  --accent: #81d8d0;
+  --accent-ink: #0b2526;
   --danger: #ff8a86;
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -27,8 +27,8 @@ body {
   margin: 0;
   color: var(--text);
   background:
-    radial-gradient(circle at 88% -8%, rgba(255, 207, 85, 0.18), transparent 32%),
-    radial-gradient(circle at -12% 42%, rgba(139, 116, 255, 0.08), transparent 28%),
+    radial-gradient(circle at 88% -8%, rgba(129, 216, 208, 0.20), transparent 32%),
+    radial-gradient(circle at -12% 42%, rgba(99, 180, 190, 0.09), transparent 28%),
     var(--background);
   background-attachment: fixed;
 }
@@ -134,9 +134,9 @@ h2 { margin-bottom: 0; font-size: 1.65rem; letter-spacing: -0.04em; }
   animation-delay: calc(var(--reveal-index, 0) * 55ms);
 }
 
-.result-card:nth-child(2) { --card-accent: #ff9c7d; }
-.result-card:nth-child(3) { --card-accent: #9caeff; }
-.result-card:nth-child(4) { --card-accent: #7ee2b8; }
+.result-card:nth-child(2) { --card-accent: #a7e7dc; }
+.result-card:nth-child(3) { --card-accent: #75c5d3; }
+.result-card:nth-child(4) { --card-accent: #b9b1ee; }
 
 .result-card::before {
   position: absolute;
@@ -351,11 +351,11 @@ h2 { margin-bottom: 0; font-size: 1.65rem; letter-spacing: -0.04em; }
   font-size: 1rem;
   font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 14px 36px rgba(255, 207, 85, 0.2);
+  box-shadow: 0 14px 36px rgba(129, 216, 208, 0.20);
   transition: transform 160ms var(--ease-out), box-shadow 200ms ease, filter 200ms ease;
 }
 
-.generate-button:active { transform: scale(0.975); box-shadow: 0 8px 22px rgba(255, 207, 85, 0.14); }
+.generate-button:active { transform: scale(0.975); box-shadow: 0 8px 22px rgba(129, 216, 208, 0.14); }
 .generate-button:disabled { cursor: wait; filter: grayscale(0.7); opacity: 0.48; }
 
 .generate-symbol {
