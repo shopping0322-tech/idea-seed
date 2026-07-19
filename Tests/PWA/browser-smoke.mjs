@@ -182,6 +182,7 @@ async function main() {
             documentWidth: document.documentElement.scrollWidth,
             cardsInsideViewport: [...document.querySelectorAll(".generator-menu-card")]
               .every((card) => card.getBoundingClientRect().right <= window.innerWidth),
+            lineIcons: document.querySelectorAll(".menu-card-icon svg").length,
           });
           return;
         }
@@ -200,6 +201,7 @@ async function main() {
     viewportWidth: 390,
     documentWidth: 390,
     cardsInsideViewport: true,
+    lineIcons: 2,
   });
 
   const sceneReady = await chooseGenerator(client, "scene");

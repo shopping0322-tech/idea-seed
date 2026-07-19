@@ -7,7 +7,6 @@ const GENERATORS = new Map([
   ["scene", {
     id: "scene",
     label: "シーン生成",
-    eyebrow: "IDEA SEED / SCENE",
     description: "4つの独立した種を組み合わせる",
     generateLabel: "シーンを生成",
     manifestPath: "manifest.json",
@@ -15,7 +14,6 @@ const GENERATORS = new Map([
   ["logline", {
     id: "logline",
     label: "ログライン生成",
-    eyebrow: "IDEA SEED / LOGLINE",
     description: "物語の核になる6つの材料を引く",
     generateLabel: "材料を生成",
     manifestPath: "logline/manifest.json",
@@ -23,7 +21,6 @@ const GENERATORS = new Map([
 ]);
 
 const elements = {
-  appEyebrow: document.querySelector("#app-eyebrow"),
   appTitle: document.querySelector("#app-title"),
   appShell: document.querySelector(".app-shell"),
   menuButton: document.querySelector("#menu-button"),
@@ -129,7 +126,6 @@ async function selectGenerator(generatorId, selectedCard) {
 }
 
 function applyGeneratorIdentity(generator) {
-  elements.appEyebrow.textContent = generator.eyebrow;
   elements.appTitle.textContent = generator.label;
   elements.modeDescription.textContent = generator.description;
   elements.generateLabel.textContent = generator.generateLabel;
@@ -423,7 +419,6 @@ function showView(name) {
   elements.modeContext.hidden = showingMenu;
   elements.actionFooter.hidden = name !== "generator" || !currentGenerator;
   if (showingMenu) {
-    elements.appEyebrow.textContent = "IDEA SEED";
     elements.appTitle.textContent = "発想の種";
     delete document.body.dataset.generator;
   }
