@@ -1,4 +1,4 @@
-const CACHE_NAME = "idea-seed-shell-v12";
+const CACHE_NAME = "idea-seed-shell-v13";
 const APP_SHELL = [
   "./",
   "./index.html",

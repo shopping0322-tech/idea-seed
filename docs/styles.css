@@ -48,8 +48,7 @@ input, select { font: inherit; }
   padding: max(24px, env(safe-area-inset-top)) 20px calc(132px + var(--safe-bottom));
 }
 
-.app-header,
-.section-heading {
+.app-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -75,29 +74,35 @@ input, select { font: inherit; }
 .mode-context {
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 9px;
+  min-height: 18px;
   margin-top: 18px;
   color: var(--muted);
 }
 
 .mode-context p { margin: 0; font-size: 0.78rem; line-height: 1.5; }
 
-.mode-mini-mark {
+.mode-context-icon {
   display: grid;
-  grid-template-columns: repeat(3, 4px);
-  gap: 3px;
-  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  place-items: center;
+  color: var(--accent);
 }
 
-.mode-mini-mark i {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 7px rgba(129, 216, 208, 0.45);
+.mode-context-icon svg {
+  display: none;
+  width: 23px;
+  height: 23px;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-body[data-generator="scene"] .mode-mini-mark i:nth-child(n+5) { display: none; }
+body[data-generator="scene"] [data-mode-icon="scene"],
+body[data-generator="logline"] [data-mode-icon="logline"] { display: block; }
 
 .header-menu-button:active {
   color: var(--text);
@@ -116,17 +121,6 @@ h1, h2, p { margin-top: 0; }
 h1 { margin-bottom: 0; font-size: clamp(2rem, 9vw, 3.4rem); letter-spacing: -0.06em; }
 h2 { margin-bottom: 0; font-size: 1.65rem; letter-spacing: -0.04em; }
 
-.count-badge {
-  flex: 0 0 auto;
-  padding: 7px 11px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  color: var(--muted);
-  background: rgba(255,255,255,0.035);
-  font-size: 0.72rem;
-  font-weight: 700;
-}
-
 .tab-bar {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -139,6 +133,10 @@ h2 { margin-bottom: 0; font-size: 1.65rem; letter-spacing: -0.04em; }
 }
 
 .tab-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   min-height: 44px;
   border: 0;
   border-radius: 11px;
@@ -148,6 +146,18 @@ h2 { margin-bottom: 0; font-size: 1.65rem; letter-spacing: -0.04em; }
   cursor: pointer;
   transition: color 180ms ease, background 180ms ease, transform 180ms ease;
 }
+
+.tab-count {
+  min-width: 28px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.055);
+  font-size: 0.64rem;
+  line-height: 1.4;
+}
+
+.tab-button.is-active .tab-count { color: var(--accent); background: rgba(129, 216, 208, 0.08); }
 
 .tab-button:active { transform: scale(0.97); }
 
@@ -332,7 +342,6 @@ body[data-generator="logline"] .result-card:nth-child(4) .result-value {
 }
 
 .message.is-error { color: var(--danger); }
-.section-heading { margin-bottom: 18px; }
 
 .history-tools {
   display: grid;

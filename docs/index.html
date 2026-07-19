@@ -25,15 +25,26 @@
     </header>
 
     <div id="mode-context" class="mode-context" hidden>
-      <span class="mode-mini-mark" aria-hidden="true">
-        <i></i><i></i><i></i><i></i><i></i><i></i>
+      <span class="mode-context-icon" aria-hidden="true">
+        <svg data-mode-icon="scene" viewBox="0 0 48 48" fill="none">
+          <path d="M10 18.5h28v20H10z"/>
+          <path d="M8.5 10h27.8l3.2 8.5H11.7z"/>
+          <path d="m15 10 3.2 8.5M24 10l3.2 8.5M33 10l3.2 8.5M10 25h28"/>
+        </svg>
+        <svg data-mode-icon="logline" viewBox="0 0 48 48" fill="none">
+          <path d="M12 8h18l6 6v26H12z"/>
+          <path d="M30 8v7h6M18 23h12M18 29h12M18 35h8"/>
+          <path d="m39 20 1 2.5 2.5 1-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1z"/>
+        </svg>
       </span>
       <p id="mode-description"></p>
     </div>
 
     <nav class="tab-bar" aria-label="画面切り替え" hidden>
       <button class="tab-button is-active" type="button" data-view="generator" aria-selected="true">生成</button>
-      <button class="tab-button" type="button" data-view="history" aria-selected="false">履歴</button>
+      <button class="tab-button" type="button" data-view="history" aria-selected="false">
+        履歴 <span id="history-count" class="tab-count">0件</span>
+      </button>
     </nav>
 
     <main>
@@ -85,13 +96,7 @@
         <p id="generator-message" class="message" role="status"></p>
       </section>
 
-      <section id="history-view" class="view-panel" aria-labelledby="history-title" hidden>
-        <div class="section-heading">
-          <div>
-            <h2 id="history-title">履歴</h2>
-          </div>
-          <span id="history-count" class="count-badge">0件</span>
-        </div>
+      <section id="history-view" class="view-panel" aria-label="履歴" hidden>
         <div class="history-tools" aria-label="履歴操作">
           <label class="search-field">
             <span class="visually-hidden">履歴検索</span>

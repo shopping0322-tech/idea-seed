@@ -34,7 +34,6 @@ const elements = {
   actionFooter: document.querySelector(".action-footer"),
   resultList: document.querySelector("#result-list"),
   historyList: document.querySelector("#history-list"),
-  historyTitle: document.querySelector("#history-title"),
   historyCount: document.querySelector("#history-count"),
   historySearch: document.querySelector("#history-search"),
   historySort: document.querySelector("#history-sort"),
@@ -129,7 +128,6 @@ function applyGeneratorIdentity(generator) {
   elements.appTitle.textContent = generator.label;
   elements.modeDescription.textContent = generator.description;
   elements.generateLabel.textContent = generator.generateLabel;
-  elements.historyTitle.textContent = `${generator.label}の履歴`;
 }
 
 async function transitionToGenerator(selectedCard) {

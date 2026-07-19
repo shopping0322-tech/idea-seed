@@ -104,6 +104,7 @@ async function chooseGenerator(client, generatorId) {
             title: document.querySelector("#app-title")?.textContent?.trim(),
             modeDescription: document.querySelector("#mode-description")?.textContent?.trim(),
             generateLabel: document.querySelector(".generate-label")?.textContent?.trim(),
+            modeIconVisible: getComputedStyle(document.querySelector('[data-mode-icon="${generatorId}"]')).display !== "none",
           });
           return;
         }
@@ -210,6 +211,7 @@ async function main() {
   assert.equal(sceneReady.title, "シーン生成");
   assert.equal(sceneReady.modeDescription, "4つの独立した種を組み合わせる");
   assert.equal(sceneReady.generateLabel, "シーンを生成");
+  assert.equal(sceneReady.modeIconVisible, true);
   assert.equal(await clearCurrentHistory(client), "0件");
 
   const firstScene = await generate(client);
@@ -240,6 +242,7 @@ async function main() {
   assert.equal(loglineReady.title, "ログライン生成");
   assert.equal(loglineReady.modeDescription, "物語の核になる6つの材料を引く");
   assert.equal(loglineReady.generateLabel, "材料を生成");
+  assert.equal(loglineReady.modeIconVisible, true);
   assert.equal(await clearCurrentHistory(client), "0件");
 
   const logline = await generate(client);
@@ -253,11 +256,11 @@ async function main() {
       document.querySelector('[data-view="history"]').click();
       setTimeout(() => resolve({
         count: document.querySelector("#history-count")?.textContent?.trim(),
-        title: document.querySelector("#history-title")?.textContent?.trim(),
+        duplicateHeading: document.querySelector("#history-title") !== null,
       }), 200);
     })`,
   );
-  assert.deepEqual(loglineHistory, { count: "1件", title: "ログライン生成の履歴" });
+  assert.deepEqual(loglineHistory, { count: "1件", duplicateHeading: false });
 
   await evaluate(client, `document.querySelector("#menu-button").click()`);
   assert.equal((await chooseGenerator(client, "scene")).ready, true);
