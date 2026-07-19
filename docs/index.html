@@ -19,10 +19,17 @@
     <header class="app-header">
       <div>
         <p id="app-eyebrow" class="eyebrow">IDEA SEED</p>
-        <h1>発想の種</h1>
+        <h1 id="app-title">発想の種</h1>
       </div>
-      <button id="menu-button" class="header-menu-button" type="button" hidden>メニュー</button>
+      <button id="menu-button" class="header-menu-button" type="button" hidden><span aria-hidden="true">←</span> メニュー</button>
     </header>
+
+    <div id="mode-context" class="mode-context" hidden>
+      <span class="mode-mini-mark" aria-hidden="true">
+        <i></i><i></i><i></i><i></i><i></i><i></i>
+      </span>
+      <p id="mode-description"></p>
+    </div>
 
     <nav class="tab-bar" aria-label="画面切り替え" hidden>
       <button class="tab-button is-active" type="button" data-view="generator" aria-selected="true">生成</button>
@@ -32,26 +39,32 @@
     <main>
       <section id="menu-view" class="view-panel is-active" aria-labelledby="menu-title">
         <div class="menu-heading">
-          <p class="eyebrow">CHOOSE A GENERATOR</p>
-          <h2 id="menu-title">何を考える？</h2>
-          <p>欲しい発想の種を選んでください。</p>
+          <p class="eyebrow">START FROM A SEED</p>
+          <h2 id="menu-title">どこから考える？</h2>
+          <p>考えたいものに合わせて、発想の入口を選ぶ。</p>
         </div>
         <div class="generator-menu">
           <button class="generator-menu-card" type="button" data-generator-id="scene">
-            <span class="menu-card-index">01</span>
-            <span class="menu-card-body">
-              <strong>シーン生成</strong>
-              <small>いつ・どこで・誰が・何をした</small>
+            <span class="menu-card-visual scene-visual" aria-hidden="true">
+              <i></i><i></i><i></i><i></i>
             </span>
-            <span class="menu-card-arrow" aria-hidden="true">→</span>
+            <span class="menu-card-body">
+              <small class="menu-card-kicker">4 RANDOM SEEDS</small>
+              <strong>シーン生成</strong>
+              <small>いつ、どこで、誰が、何をした</small>
+            </span>
+            <span class="menu-card-arrow" aria-hidden="true"><i>→</i></span>
           </button>
           <button class="generator-menu-card" type="button" data-generator-id="logline">
-            <span class="menu-card-index">02</span>
-            <span class="menu-card-body">
-              <strong>ログライン生成</strong>
-              <small>主人公・欲望・日常・異常・舞台・スケール</small>
+            <span class="menu-card-visual logline-visual" aria-hidden="true">
+              <i></i><i></i><i></i><i></i><i></i><i></i>
             </span>
-            <span class="menu-card-arrow" aria-hidden="true">→</span>
+            <span class="menu-card-body">
+              <small class="menu-card-kicker">6 STORY MATERIALS</small>
+              <strong>ログライン生成</strong>
+              <small>物語の核になる6つの材料</small>
+            </span>
+            <span class="menu-card-arrow" aria-hidden="true"><i>→</i></span>
           </button>
         </div>
       </section>

@@ -7,23 +7,32 @@ const GENERATORS = new Map([
   ["scene", {
     id: "scene",
     label: "シーン生成",
-    eyebrow: "SCENE SEED",
+    eyebrow: "IDEA SEED / SCENE",
+    description: "4つの独立した種を組み合わせる",
+    generateLabel: "シーンを生成",
     manifestPath: "manifest.json",
   }],
   ["logline", {
     id: "logline",
     label: "ログライン生成",
-    eyebrow: "LOGLINE SEED",
+    eyebrow: "IDEA SEED / LOGLINE",
+    description: "物語の核になる6つの材料を引く",
+    generateLabel: "材料を生成",
     manifestPath: "logline/manifest.json",
   }],
 ]);
 
 const elements = {
   appEyebrow: document.querySelector("#app-eyebrow"),
+  appTitle: document.querySelector("#app-title"),
+  appShell: document.querySelector(".app-shell"),
   menuButton: document.querySelector("#menu-button"),
+  modeContext: document.querySelector("#mode-context"),
+  modeDescription: document.querySelector("#mode-description"),
   menuCards: [...document.querySelectorAll("[data-generator-id]")],
   tabBar: document.querySelector(".tab-bar"),
   generateButton: document.querySelector("#generate-button"),
+  generateLabel: document.querySelector(".generate-label"),
   generatorMessage: document.querySelector("#generator-message"),
   actionFooter: document.querySelector(".action-footer"),
   resultList: document.querySelector("#result-list"),
@@ -45,6 +54,7 @@ const elements = {
 let currentGenerator = null;
 let categories = [];
 let generating = false;
+let transitioning = false;
 let loadingSequence = 0;
 let historyRecords = [];
 let pendingDeleteAction = null;
@@ -59,9 +69,9 @@ function start() {
 }
 
 function bindEvents() {
-  elements.menuCards.forEach((card) => card.addEventListener("click", () => selectGenerator(card.dataset.generatorId)));
+  elements.menuCards.forEach((card) => card.addEventListener("click", () => selectGenerator(card.dataset.generatorId, card)));
   elements.menuButton.addEventListener("click", () => {
-    if (!generating) showView("menu");
+    if (!generating) returnToMenu();
   });
   elements.generateButton.addEventListener("click", generate);
   elements.historySearch.addEventListener("input", renderHistoryList);
@@ -74,26 +84,33 @@ function bindEvents() {
   elements.tabs.forEach((tab) => tab.addEventListener("click", () => showView(tab.dataset.view)));
 }
 
-async function selectGenerator(generatorId) {
+async function selectGenerator(generatorId, selectedCard) {
   const generator = GENERATORS.get(generatorId);
-  if (!generator || generating) return;
+  if (!generator || generating || transitioning) return;
 
   const sequence = ++loadingSequence;
   currentGenerator = generator;
   document.body.dataset.generator = generator.id;
   categories = [];
   historyRecords = [];
-  elements.appEyebrow.textContent = generator.eyebrow;
-  elements.historyTitle.textContent = `${generator.label}の履歴`;
   elements.historySearch.value = "";
   restoreHistorySort();
   resetResult();
   setMessage("データを読み込んでいます…");
   elements.generateButton.disabled = true;
+  const datasetPromise = loadDataset({ datasetId: generator.id, manifestPath: generator.manifestPath })
+    .then((dataset) => ({ dataset }))
+    .catch((error) => ({ error }));
+  await transitionToGenerator(selectedCard);
+  if (sequence !== loadingSequence || currentGenerator?.id !== generator.id) return;
+  applyGeneratorIdentity(generator);
   showView("generator");
+  animateScreenIn("forward");
 
   try {
-    const dataset = await loadDataset({ datasetId: generator.id, manifestPath: generator.manifestPath });
+    const result = await datasetPromise;
+    if (result.error) throw result.error;
+    const { dataset } = result;
     if (sequence !== loadingSequence || currentGenerator?.id !== generator.id) return;
     categories = dataset.categories;
     elements.generateButton.disabled = false;
@@ -109,6 +126,63 @@ async function selectGenerator(generatorId) {
     if (sequence !== loadingSequence) return;
     setMessage(error.message ?? "データを読み込めませんでした。", true);
   }
+}
+
+function applyGeneratorIdentity(generator) {
+  elements.appEyebrow.textContent = generator.eyebrow;
+  elements.appTitle.textContent = generator.label;
+  elements.modeDescription.textContent = generator.description;
+  elements.generateLabel.textContent = generator.generateLabel;
+  elements.historyTitle.textContent = `${generator.label}の履歴`;
+}
+
+async function transitionToGenerator(selectedCard) {
+  transitioning = true;
+  cancelScreenAnimations();
+  selectedCard?.classList.add("is-launching");
+  if (!prefersReducedMotion()) {
+    await elements.appShell.animate([
+      { opacity: 1, transform: "translateX(0) scale(1)" },
+      { opacity: 0, transform: "translateX(-22px) scale(0.992)" },
+    ], { duration: 210, easing: "cubic-bezier(0.4, 0, 0.2, 1)", fill: "forwards" }).finished;
+  }
+  selectedCard?.classList.remove("is-launching");
+  transitioning = false;
+}
+
+async function returnToMenu() {
+  if (transitioning) return;
+  transitioning = true;
+  cancelScreenAnimations();
+  if (!prefersReducedMotion()) {
+    await elements.appShell.animate([
+      { opacity: 1, transform: "translateX(0) scale(1)" },
+      { opacity: 0, transform: "translateX(22px) scale(0.992)" },
+    ], { duration: 180, easing: "cubic-bezier(0.4, 0, 1, 1)", fill: "forwards" }).finished;
+  }
+  showView("menu");
+  transitioning = false;
+  animateScreenIn("back");
+}
+
+function animateScreenIn(direction) {
+  cancelScreenAnimations();
+  if (prefersReducedMotion()) {
+    return;
+  }
+  const offset = direction === "forward" ? "22px" : "-22px";
+  elements.appShell.animate([
+    { opacity: 0, transform: `translateX(${offset}) scale(0.992)` },
+    { opacity: 1, transform: "translateX(0) scale(1)" },
+  ], { duration: 300, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)", fill: "both" });
+}
+
+function cancelScreenAnimations() {
+  elements.appShell.getAnimations().forEach((animation) => animation.cancel());
+}
+
+function prefersReducedMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
 async function generate() {
@@ -346,9 +420,11 @@ function showView(name) {
   });
   elements.tabBar.hidden = showingMenu;
   elements.menuButton.hidden = showingMenu;
+  elements.modeContext.hidden = showingMenu;
   elements.actionFooter.hidden = name !== "generator" || !currentGenerator;
   if (showingMenu) {
     elements.appEyebrow.textContent = "IDEA SEED";
+    elements.appTitle.textContent = "発想の種";
     delete document.body.dataset.generator;
   }
 }

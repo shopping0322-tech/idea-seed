@@ -87,9 +87,13 @@ async function chooseGenerator(client, generatorId) {
   return evaluate(
     client,
     `new Promise((resolve) => {
-      document.querySelector('[data-generator-id="${generatorId}"]').click();
       const deadline = Date.now() + 10000;
+      let clicked = false;
       const tick = () => {
+        if (!clicked && !document.querySelector("#menu-view")?.hidden && !document.body.dataset.generator) {
+          document.querySelector('[data-generator-id="${generatorId}"]').click();
+          clicked = true;
+        }
         const ready = document.body.dataset.generator === "${generatorId}"
           && document.querySelector("#generate-button")?.disabled === false;
         if (ready || Date.now() > deadline) {
@@ -97,6 +101,9 @@ async function chooseGenerator(client, generatorId) {
             ready,
             message: document.querySelector("#generator-message")?.textContent?.trim(),
             footerVisible: !document.querySelector(".action-footer")?.hidden,
+            title: document.querySelector("#app-title")?.textContent?.trim(),
+            modeDescription: document.querySelector("#mode-description")?.textContent?.trim(),
+            generateLabel: document.querySelector(".generate-label")?.textContent?.trim(),
           });
           return;
         }
@@ -170,6 +177,11 @@ async function main() {
             menuVisible: !document.querySelector("#menu-view")?.hidden,
             tabsHidden: document.querySelector(".tab-bar")?.hidden,
             footerHidden: document.querySelector(".action-footer")?.hidden,
+            appTitle: document.querySelector("#app-title")?.textContent?.trim(),
+            viewportWidth: window.innerWidth,
+            documentWidth: document.documentElement.scrollWidth,
+            cardsInsideViewport: [...document.querySelectorAll(".generator-menu-card")]
+              .every((card) => card.getBoundingClientRect().right <= window.innerWidth),
           });
           return;
         }
@@ -178,11 +190,24 @@ async function main() {
       tick();
     })`,
   );
-  assert.deepEqual(menu, { cards: 2, appReady: true, menuVisible: true, tabsHidden: true, footerHidden: true });
+  assert.deepEqual(menu, {
+    cards: 2,
+    appReady: true,
+    menuVisible: true,
+    tabsHidden: true,
+    footerHidden: true,
+    appTitle: "発想の種",
+    viewportWidth: 390,
+    documentWidth: 390,
+    cardsInsideViewport: true,
+  });
 
   const sceneReady = await chooseGenerator(client, "scene");
   assert.equal(sceneReady.ready, true, sceneReady.message);
   assert.equal(sceneReady.footerVisible, true);
+  assert.equal(sceneReady.title, "シーン生成");
+  assert.equal(sceneReady.modeDescription, "4つの独立した種を組み合わせる");
+  assert.equal(sceneReady.generateLabel, "シーンを生成");
   assert.equal(await clearCurrentHistory(client), "0件");
 
   const firstScene = await generate(client);
@@ -210,6 +235,9 @@ async function main() {
   await evaluate(client, `document.querySelector("#menu-button").click()`);
   const loglineReady = await chooseGenerator(client, "logline");
   assert.equal(loglineReady.ready, true, loglineReady.message);
+  assert.equal(loglineReady.title, "ログライン生成");
+  assert.equal(loglineReady.modeDescription, "物語の核になる6つの材料を引く");
+  assert.equal(loglineReady.generateLabel, "材料を生成");
   assert.equal(await clearCurrentHistory(client), "0件");
 
   const logline = await generate(client);
