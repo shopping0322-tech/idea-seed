@@ -94,23 +94,17 @@
       </section>
 
       <section id="history-view" class="view-panel" aria-label="履歴" hidden>
-        <div class="history-filter" role="group" aria-label="履歴の表示範囲" data-active="all">
-          <button class="history-filter-button is-active" type="button" data-history-filter="all" aria-pressed="true">
-            すべて <span id="history-total-filter-count" class="filter-count">0</span>
-          </button>
-          <button class="history-filter-button" type="button" data-history-filter="favorites" aria-pressed="false">
-            <span aria-hidden="true">★</span> お気に入り <span id="favorite-count" class="filter-count">0</span>
-          </button>
-        </div>
         <div class="history-tools" aria-label="履歴操作">
           <label class="search-field">
             <span class="visually-hidden">履歴検索</span>
             <input id="history-search" type="search" placeholder="履歴を検索" autocomplete="off">
           </label>
-          <select id="history-sort" class="history-sort" aria-label="履歴の並び順">
-            <option value="newest">新しい順</option>
-            <option value="oldest">古い順</option>
-          </select>
+          <button id="favorite-filter-button" class="history-tool-button" type="button" aria-pressed="false" aria-label="お気に入りのみ表示">
+            <span class="history-tool-symbol favorite-filter-symbol" aria-hidden="true">☆</span>
+          </button>
+          <button id="history-sort-button" class="history-tool-button" type="button" data-sort="newest" aria-label="古い順に切り替える（現在：新しい順）">
+            <span class="history-tool-symbol sort-symbol" aria-hidden="true">↓</span>
+          </button>
           <button id="clear-history-button" class="ghost-button danger-button" type="button" disabled>全削除</button>
         </div>
         <p id="history-message" class="history-message" role="status"></p>

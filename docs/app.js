@@ -37,11 +37,8 @@ const elements = {
   historyList: document.querySelector("#history-list"),
   historyCount: document.querySelector("#history-count"),
   historySearch: document.querySelector("#history-search"),
-  historySort: document.querySelector("#history-sort"),
-  historyFilters: [...document.querySelectorAll("[data-history-filter]")],
-  historyFilter: document.querySelector(".history-filter"),
-  historyTotalFilterCount: document.querySelector("#history-total-filter-count"),
-  favoriteCount: document.querySelector("#favorite-count"),
+  historySortButton: document.querySelector("#history-sort-button"),
+  favoriteFilterButton: document.querySelector("#favorite-filter-button"),
   clearHistoryButton: document.querySelector("#clear-history-button"),
   historyMessage: document.querySelector("#history-message"),
   confirmDialog: document.querySelector("#confirm-dialog"),
@@ -83,10 +80,10 @@ function bindEvents() {
   elements.generateButton.addEventListener("click", generate);
   elements.resultList.addEventListener("click", handleResultClick);
   elements.historySearch.addEventListener("input", renderHistoryList);
-  elements.historySort.addEventListener("change", changeHistorySort);
+  elements.historySortButton.addEventListener("click", toggleHistorySort);
+  elements.favoriteFilterButton.addEventListener("click", toggleHistoryFilter);
   elements.clearHistoryButton.addEventListener("click", clearAllHistory);
   elements.historyList.addEventListener("click", handleHistoryClick);
-  elements.historyFilters.forEach((button) => button.addEventListener("click", () => changeHistoryFilter(button.dataset.historyFilter)));
   elements.confirmCancelButton.addEventListener("click", () => elements.confirmDialog.close());
   elements.confirmDeleteButton.addEventListener("click", confirmDelete);
   elements.confirmDialog.addEventListener("close", resetConfirmation);
@@ -104,7 +101,7 @@ async function selectGenerator(generatorId, selectedCard) {
   historyRecords = [];
   lockedCategoryIds = new Set();
   historyFilter = "all";
-  updateHistoryFilterButtons();
+  updateHistoryFilterButton();
   elements.historySearch.value = "";
   elements.historyMessage.textContent = "";
   restoreHistorySort();
@@ -457,13 +454,12 @@ function renderHistoryList() {
     .filter((record) => historyFilter !== "favorites" || record.isFavorite === true)
     .filter((record) => !query || historySearchText(record).includes(query))
     .sort((a, b) => {
-      const direction = elements.historySort.value === "newest" ? -1 : 1;
+      const direction = elements.historySortButton.dataset.sort === "newest" ? -1 : 1;
       return direction * (a.createdAt - b.createdAt || a.id.localeCompare(b.id));
     });
 
   elements.historyCount.textContent = query ? `${filtered.length}/${historyRecords.length}件` : `${historyRecords.length}件`;
-  elements.historyTotalFilterCount.textContent = String(historyRecords.length);
-  elements.favoriteCount.textContent = String(favoriteRecords.length);
+  updateHistoryFilterButton(favoriteRecords.length);
   elements.clearHistoryButton.disabled = historyRecords.length === 0;
 
   if (historyRecords.length === 0) {
@@ -648,34 +644,46 @@ function historySortStorageKey() {
 function restoreHistorySort() {
   try {
     const savedSort = localStorage.getItem(historySortStorageKey());
-    elements.historySort.value = savedSort === "oldest" ? "oldest" : "newest";
+    updateHistorySortButton(savedSort === "oldest" ? "oldest" : "newest");
   } catch {
-    elements.historySort.value = "newest";
+    updateHistorySortButton("newest");
   }
 }
 
-function changeHistorySort() {
+function toggleHistorySort() {
+  const nextSort = elements.historySortButton.dataset.sort === "newest" ? "oldest" : "newest";
+  updateHistorySortButton(nextSort);
   try {
-    localStorage.setItem(historySortStorageKey(), elements.historySort.value);
+    localStorage.setItem(historySortStorageKey(), nextSort);
   } catch {
     // 保存できない環境でも、現在の画面では選択した並び順を使用する。
   }
   renderHistoryList();
 }
 
-function changeHistoryFilter(filter) {
-  historyFilter = filter === "favorites" ? "favorites" : "all";
-  updateHistoryFilterButtons();
+function updateHistorySortButton(sort) {
+  const isNewest = sort !== "oldest";
+  elements.historySortButton.dataset.sort = isNewest ? "newest" : "oldest";
+  elements.historySortButton.querySelector(".sort-symbol").textContent = isNewest ? "↓" : "↑";
+  elements.historySortButton.setAttribute("aria-label", isNewest
+    ? "古い順に切り替える（現在：新しい順）"
+    : "新しい順に切り替える（現在：古い順）");
+}
+
+function toggleHistoryFilter() {
+  historyFilter = historyFilter === "favorites" ? "all" : "favorites";
+  updateHistoryFilterButton(historyRecords.filter((record) => record.isFavorite === true).length);
   renderHistoryList();
 }
 
-function updateHistoryFilterButtons() {
-  elements.historyFilter.dataset.active = historyFilter;
-  elements.historyFilters.forEach((button) => {
-    const selected = button.dataset.historyFilter === historyFilter;
-    button.classList.toggle("is-active", selected);
-    button.setAttribute("aria-pressed", String(selected));
-  });
+function updateHistoryFilterButton(favoriteCount = 0) {
+  const selected = historyFilter === "favorites";
+  elements.favoriteFilterButton.classList.toggle("is-active", selected);
+  elements.favoriteFilterButton.setAttribute("aria-pressed", String(selected));
+  elements.favoriteFilterButton.setAttribute("aria-label", selected
+    ? `すべての履歴を表示（お気に入り${favoriteCount}件）`
+    : `お気に入りのみ表示（${favoriteCount}件）`);
+  elements.favoriteFilterButton.querySelector(".favorite-filter-symbol").textContent = selected ? "★" : "☆";
 }
 
 function createFavoriteButton(record) {

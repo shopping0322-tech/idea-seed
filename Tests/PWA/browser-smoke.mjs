@@ -248,11 +248,11 @@ async function main() {
       setTimeout(() => resolve({
         pressed: document.querySelector(".history-favorite-button").getAttribute("aria-pressed"),
         symbol: document.querySelector(".history-favorite-button")?.textContent,
-        favoriteCount: document.querySelector("#favorite-count")?.textContent?.trim(),
+        filterLabel: document.querySelector("#favorite-filter-button")?.getAttribute("aria-label"),
       }), 200);
     })`,
   );
-  assert.deepEqual(favoriteResult, { pressed: "true", symbol: "★", favoriteCount: "1" });
+  assert.deepEqual(favoriteResult, { pressed: "true", symbol: "★", filterLabel: "お気に入りのみ表示（1件）" });
   await evaluate(client, `document.querySelector('[data-view="generator"]').click()`);
   await generate(client);
 
@@ -331,16 +331,16 @@ async function main() {
     client,
     `new Promise((resolve) => {
       document.querySelector('[data-view="history"]').click();
-      document.querySelector("#history-sort").value = "oldest";
-      document.querySelector("#history-sort").dispatchEvent(new Event("change", { bubbles: true }));
+      document.querySelector("#history-sort-button").click();
       setTimeout(() => resolve({
         count: document.querySelector("#history-count")?.textContent?.trim(),
         savedSort: localStorage.getItem("idea-seed-history-sort"),
+        sort: document.querySelector("#history-sort-button")?.dataset.sort,
         footerHidden: document.querySelector(".action-footer")?.hidden,
       }), 200);
     })`,
   );
-  assert.deepEqual(sceneHistory, { count: "2件", savedSort: "oldest", footerHidden: true });
+  assert.deepEqual(sceneHistory, { count: "2件", savedSort: "oldest", sort: "oldest", footerHidden: true });
 
   const sharedHistory = await evaluate(
     client,
@@ -377,20 +377,21 @@ async function main() {
   const favoriteFilter = await evaluate(
     client,
     `new Promise((resolve) => {
-      document.querySelector('[data-history-filter="favorites"]').click();
+      document.querySelector("#favorite-filter-button").click();
       setTimeout(() => resolve({
         cards: document.querySelectorAll(".history-card").length,
-        selected: document.querySelector('[data-history-filter="favorites"]').getAttribute("aria-pressed"),
+        selected: document.querySelector("#favorite-filter-button").getAttribute("aria-pressed"),
+        symbol: document.querySelector(".favorite-filter-symbol").textContent,
         favoriteButtons: document.querySelectorAll(".history-favorite-button.is-favorite").length,
       }), 100);
     })`,
   );
-  assert.deepEqual(favoriteFilter, { cards: 1, selected: "true", favoriteButtons: 1 });
+  assert.deepEqual(favoriteFilter, { cards: 1, selected: "true", symbol: "★", favoriteButtons: 1 });
 
   const protectedClear = await evaluate(
     client,
     `new Promise((resolve) => {
-      document.querySelector('[data-history-filter="all"]').click();
+      document.querySelector("#favorite-filter-button").click();
       document.querySelector("#clear-history-button").click();
       const optionVisible = !document.querySelector("#confirm-favorites-option").hidden;
       document.querySelector("#confirm-delete-button").click();
@@ -461,7 +462,7 @@ async function main() {
   const afterReloadMenu = await evaluate(client, `!document.querySelector("#menu-view")?.hidden`);
   assert.equal(afterReloadMenu, true);
   assert.equal((await chooseGenerator(client, "scene")).ready, true);
-  const restoredSort = await evaluate(client, `document.querySelector("#history-sort")?.value`);
+  const restoredSort = await evaluate(client, `document.querySelector("#history-sort-button")?.dataset.sort`);
   assert.equal(restoredSort, "oldest");
 
   const restoredFavorite = await evaluate(
@@ -469,12 +470,12 @@ async function main() {
     `new Promise((resolve) => {
       document.querySelector('[data-view="history"]').click();
       setTimeout(() => resolve({
-        favoriteCount: document.querySelector("#favorite-count")?.textContent?.trim(),
+        filterLabel: document.querySelector("#favorite-filter-button")?.getAttribute("aria-label"),
         favoriteCards: document.querySelectorAll(".history-favorite-button.is-favorite").length,
       }), 100);
     })`,
   );
-  assert.deepEqual(restoredFavorite, { favoriteCount: "1", favoriteCards: 1 });
+  assert.deepEqual(restoredFavorite, { filterLabel: "お気に入りのみ表示（1件）", favoriteCards: 1 });
 
   const deletion = await evaluate(
     client,
