@@ -105,6 +105,8 @@ async function chooseGenerator(client, generatorId) {
             modeDescription: document.querySelector("#mode-description")?.textContent?.trim(),
             generateLabel: document.querySelector(".generate-label")?.textContent?.trim(),
             modeIconVisible: getComputedStyle(document.querySelector('[data-mode-icon="${generatorId}"]')).display !== "none",
+            shellTransform: getComputedStyle(document.querySelector(".app-shell")).transform,
+            scrollbarGutter: getComputedStyle(document.documentElement).scrollbarGutter,
           });
           return;
         }
@@ -183,11 +185,10 @@ async function main() {
             documentWidth: document.documentElement.scrollWidth,
             cardsInsideViewport: [...document.querySelectorAll(".generator-menu-card")]
               .every((card) => card.getBoundingClientRect().right <= window.innerWidth),
-            cardsNearlySquare: [...document.querySelectorAll(".generator-menu-card")]
-              .every((card) => {
-                const bounds = card.getBoundingClientRect();
-                return Math.abs(bounds.width / bounds.height - 1) < 0.12;
-              }),
+            cardsSingleColumn: new Set([...document.querySelectorAll(".generator-menu-card")]
+              .map((card) => Math.round(card.getBoundingClientRect().left))).size === 1,
+            cardsAreLarge: [...document.querySelectorAll(".generator-menu-card")]
+              .every((card) => card.getBoundingClientRect().height >= 180),
             cardContentFits: [...document.querySelectorAll(".generator-menu-card")]
               .every((card) => card.scrollWidth <= card.clientWidth && card.scrollHeight <= card.clientHeight),
             menuHeadingAbsent: document.querySelector(".menu-heading") === null,
@@ -210,7 +211,8 @@ async function main() {
     viewportWidth: 390,
     documentWidth: 390,
     cardsInsideViewport: true,
-    cardsNearlySquare: true,
+    cardsSingleColumn: true,
+    cardsAreLarge: true,
     cardContentFits: true,
     menuHeadingAbsent: true,
     lineIcons: 2,
@@ -223,6 +225,8 @@ async function main() {
   assert.equal(sceneReady.modeDescription, "4つの独立した種を組み合わせる");
   assert.equal(sceneReady.generateLabel, "シーンを生成");
   assert.equal(sceneReady.modeIconVisible, true);
+  assert.equal(sceneReady.shellTransform, "none");
+  assert.match(sceneReady.scrollbarGutter, /stable/);
   assert.equal(await clearCurrentHistory(client), "0件");
 
   const firstScene = await generate(client);
@@ -374,6 +378,7 @@ async function main() {
   await generate(client);
 
   const desktopButtonWidths = [];
+  const desktopFooterContentWidths = [];
   const desktopResultColumns = [];
   for (const width of [900, 1440]) {
     await client.send("Emulation.setDeviceMetricsOverride", {
@@ -386,12 +391,18 @@ async function main() {
       client,
       `Math.round(document.querySelector("#generate-button").getBoundingClientRect().width)`,
     ));
+    desktopFooterContentWidths.push(await evaluate(
+      client,
+      `Math.round(document.querySelector("#generate-button").getBoundingClientRect().width
+        + document.querySelector("#result-favorite-button").getBoundingClientRect().width + 10)`,
+    ));
     desktopResultColumns.push(await evaluate(
       client,
       `new Set([...document.querySelectorAll(".result-card")].map((card) => Math.round(card.getBoundingClientRect().left))).size`,
     ));
   }
-  assert.deepEqual(desktopButtonWidths, [680, 680]);
+  assert.deepEqual(desktopButtonWidths, [612, 612]);
+  assert.deepEqual(desktopFooterContentWidths, [680, 680]);
   assert.deepEqual(desktopResultColumns, [1, 1]);
 
   client.close();

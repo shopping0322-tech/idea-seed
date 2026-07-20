@@ -84,12 +84,6 @@
 
       <section id="generator-view" class="view-panel" aria-labelledby="generator-title" hidden>
         <h2 id="generator-title" class="visually-hidden">生成結果</h2>
-        <div id="result-actions" class="result-actions" hidden>
-          <button id="result-favorite-button" class="favorite-action-button" type="button" aria-pressed="false">
-            <span class="favorite-symbol" aria-hidden="true">☆</span>
-            <span class="favorite-label">お気に入り</span>
-          </button>
-        </div>
         <div id="result-list" class="result-list" aria-live="polite">
           <div class="empty-state">
             <span class="seed-mark" aria-hidden="true">✦</span>
@@ -100,8 +94,10 @@
       </section>
 
       <section id="history-view" class="view-panel" aria-label="履歴" hidden>
-        <div class="history-filter" role="group" aria-label="履歴の表示範囲">
-          <button class="history-filter-button is-active" type="button" data-history-filter="all" aria-pressed="true">すべて</button>
+        <div class="history-filter" role="group" aria-label="履歴の表示範囲" data-active="all">
+          <button class="history-filter-button is-active" type="button" data-history-filter="all" aria-pressed="true">
+            すべて <span id="history-total-filter-count" class="filter-count">0</span>
+          </button>
           <button class="history-filter-button" type="button" data-history-filter="favorites" aria-pressed="false">
             <span aria-hidden="true">★</span> お気に入り <span id="favorite-count" class="filter-count">0</span>
           </button>
@@ -127,6 +123,9 @@
       <button id="generate-button" class="generate-button" type="button" disabled>
         <span class="generate-label">生成</span>
         <span class="generate-symbol" aria-hidden="true">✦</span>
+      </button>
+      <button id="result-favorite-button" class="footer-favorite-button" type="button" aria-pressed="false" aria-label="お気に入りに追加" disabled>
+        <span class="favorite-symbol" aria-hidden="true">☆</span>
       </button>
     </footer>
   </div>

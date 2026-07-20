@@ -23,6 +23,7 @@ const GENERATORS = new Map([
 const elements = {
   appTitle: document.querySelector("#app-title"),
   appShell: document.querySelector(".app-shell"),
+  appHeader: document.querySelector(".app-header"),
   menuButton: document.querySelector("#menu-button"),
   modeContext: document.querySelector("#mode-context"),
   modeDescription: document.querySelector("#mode-description"),
@@ -32,7 +33,6 @@ const elements = {
   generateLabel: document.querySelector(".generate-label"),
   generatorMessage: document.querySelector("#generator-message"),
   actionFooter: document.querySelector(".action-footer"),
-  resultActions: document.querySelector("#result-actions"),
   resultFavoriteButton: document.querySelector("#result-favorite-button"),
   resultList: document.querySelector("#result-list"),
   historyList: document.querySelector("#history-list"),
@@ -40,6 +40,8 @@ const elements = {
   historySearch: document.querySelector("#history-search"),
   historySort: document.querySelector("#history-sort"),
   historyFilters: [...document.querySelectorAll("[data-history-filter]")],
+  historyFilter: document.querySelector(".history-filter"),
+  historyTotalFilterCount: document.querySelector("#history-total-filter-count"),
   favoriteCount: document.querySelector("#favorite-count"),
   clearHistoryButton: document.querySelector("#clear-history-button"),
   confirmDialog: document.querySelector("#confirm-dialog"),
@@ -145,14 +147,21 @@ function applyGeneratorIdentity(generator) {
 async function transitionToGenerator(selectedCard) {
   transitioning = true;
   cancelScreenAnimations();
-  selectedCard?.classList.add("is-launching");
   if (!prefersReducedMotion()) {
-    await elements.appShell.animate([
-      { opacity: 1, transform: "translateX(0) scale(1)" },
-      { opacity: 0, transform: "translateX(-22px) scale(0.992)" },
-    ], { duration: 210, easing: "cubic-bezier(0.4, 0, 0.2, 1)", fill: "forwards" }).finished;
+    if (selectedCard) {
+      const pulse = selectedCard.animate([
+        { transform: "scale(1)", filter: "brightness(1)" },
+        { transform: "scale(1.025)", filter: "brightness(1.12)", offset: 0.55 },
+        { transform: "scale(1)", filter: "brightness(1)" },
+      ], { duration: 220, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)" });
+      await animationFinished(pulse);
+    }
+    const menuExit = document.querySelector("#menu-view").animate([
+      { opacity: 1, transform: "translateY(0) scale(1)", filter: "blur(0)" },
+      { opacity: 0, transform: "translateY(-10px) scale(0.985)", filter: "blur(4px)" },
+    ], { duration: 180, easing: "cubic-bezier(0.4, 0, 1, 1)", fill: "forwards" });
+    await animationFinished(menuExit);
   }
-  selectedCard?.classList.remove("is-launching");
   transitioning = false;
 }
 
@@ -161,10 +170,18 @@ async function returnToMenu() {
   transitioning = true;
   cancelScreenAnimations();
   if (!prefersReducedMotion()) {
-    await elements.appShell.animate([
-      { opacity: 1, transform: "translateX(0) scale(1)" },
-      { opacity: 0, transform: "translateX(22px) scale(0.992)" },
-    ], { duration: 180, easing: "cubic-bezier(0.4, 0, 1, 1)", fill: "forwards" }).finished;
+    const visiblePanel = elements.panels.find((panel) => !panel.hidden);
+    const exitTargets = [elements.appHeader, elements.modeContext, elements.tabBar, visiblePanel].filter(Boolean);
+    const exits = exitTargets.map((target, index) => target.animate([
+      { opacity: 1, transform: "translateY(0)" },
+      { opacity: 0, transform: "translateY(8px)" },
+    ], {
+      duration: 150,
+      delay: index * 14,
+      easing: "cubic-bezier(0.4, 0, 1, 1)",
+      fill: "forwards",
+    }));
+    await Promise.all(exits.map(animationFinished));
   }
   showView("menu");
   transitioning = false;
@@ -173,19 +190,46 @@ async function returnToMenu() {
 
 function animateScreenIn(direction) {
   cancelScreenAnimations();
-  if (prefersReducedMotion()) {
-    return;
+  if (prefersReducedMotion()) return;
+  const activePanel = elements.panels.find((panel) => !panel.hidden);
+  const targets = direction === "forward"
+    ? [elements.appHeader, elements.modeContext, elements.tabBar, activePanel]
+    : [elements.appHeader, ...elements.menuCards];
+  targets.filter(Boolean).forEach((target, index) => {
+    const animation = target.animate([
+      { opacity: 0, transform: "translateY(14px) scale(0.99)", filter: "blur(3px)" },
+      { opacity: 1, transform: "translateY(0) scale(1)", filter: "blur(0)" },
+    ], {
+      duration: 340,
+      delay: index * 42,
+      easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
+      fill: "both",
+    });
+    animationFinished(animation).then(() => animation.cancel());
+  });
+  if (direction === "forward") {
+    const footerAnimation = elements.actionFooter.animate(
+      [{ opacity: 0 }, { opacity: 1 }],
+      { duration: 260, delay: 150, easing: "ease-out", fill: "both" },
+    );
+    animationFinished(footerAnimation).then(() => footerAnimation.cancel());
   }
-  const offset = direction === "forward" ? "22px" : "-22px";
-  const animation = elements.appShell.animate([
-    { opacity: 0, transform: `translateX(${offset}) scale(0.992)` },
-    { opacity: 1, transform: "translateX(0) scale(1)" },
-  ], { duration: 300, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)", fill: "both" });
-  animation.finished.then(() => animation.cancel()).catch(() => {});
 }
 
 function cancelScreenAnimations() {
-  elements.appShell.getAnimations().forEach((animation) => animation.cancel());
+  [
+    elements.appShell,
+    elements.appHeader,
+    elements.modeContext,
+    elements.tabBar,
+    elements.actionFooter,
+    ...elements.panels,
+    ...elements.menuCards,
+  ].filter(Boolean).forEach((element) => element.getAnimations().forEach((animation) => animation.cancel()));
+}
+
+function animationFinished(animation) {
+  return animation.finished.catch(() => {});
 }
 
 function prefersReducedMotion() {
@@ -229,7 +273,8 @@ async function generate() {
 
 function resetResult() {
   currentResultRecord = null;
-  elements.resultActions.hidden = true;
+  elements.resultFavoriteButton.disabled = true;
+  updateFavoriteButton(elements.resultFavoriteButton, false);
   elements.resultList.innerHTML = `
     <div class="empty-state">
       <span class="seed-mark" aria-hidden="true">✦</span>
@@ -239,7 +284,7 @@ function resetResult() {
 
 function renderResult(record) {
   currentResultRecord = record;
-  elements.resultActions.hidden = false;
+  elements.resultFavoriteButton.disabled = false;
   updateFavoriteButton(elements.resultFavoriteButton, record.isFavorite === true);
   elements.resultList.replaceChildren(...record.items.map((item, index) => {
     const card = document.createElement("article");
@@ -278,6 +323,7 @@ function renderHistoryList() {
     });
 
   elements.historyCount.textContent = query ? `${filtered.length}/${historyRecords.length}件` : `${historyRecords.length}件`;
+  elements.historyTotalFilterCount.textContent = String(historyRecords.length);
   elements.favoriteCount.textContent = String(favoriteRecords.length);
   elements.clearHistoryButton.disabled = historyRecords.length === 0;
 
@@ -445,6 +491,7 @@ function changeHistoryFilter(filter) {
 }
 
 function updateHistoryFilterButtons() {
+  elements.historyFilter.dataset.active = historyFilter;
   elements.historyFilters.forEach((button) => {
     const selected = button.dataset.historyFilter === historyFilter;
     button.classList.toggle("is-active", selected);
