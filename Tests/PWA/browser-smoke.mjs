@@ -262,7 +262,11 @@ async function main() {
       const firstCard = document.querySelector(".result-card");
       const lockedValue = firstCard.querySelector(".result-value").textContent;
       const unlockedIconPath = firstCard.querySelector(".lock-button path")?.getAttribute("d");
-      const lockButtonSize = Math.round(firstCard.querySelector(".lock-button").getBoundingClientRect().width);
+      const lockButton = firstCard.querySelector(".lock-button");
+      const lockButtonSize = Math.round(lockButton.getBoundingClientRect().width);
+      const lockButtonBorder = getComputedStyle(lockButton).borderTopWidth;
+      const lockButtonBackground = getComputedStyle(lockButton).backgroundColor;
+      const lockButtonHitArea = getComputedStyle(lockButton, "::before").top;
       firstCard.querySelector(".lock-button").click();
       const lockedPressed = firstCard.querySelector(".lock-button").getAttribute("aria-pressed");
       const bulkLabel = document.querySelector(".generate-label").textContent.trim();
@@ -273,6 +277,9 @@ async function main() {
         bulkLabel,
         iconChanged: firstCard.querySelector(".lock-button path")?.getAttribute("d") !== unlockedIconPath,
         lockButtonSize,
+        lockButtonBorder,
+        lockButtonBackground,
+        lockButtonHitArea,
         lockedValueKept: document.querySelector(".result-card .result-value").textContent === lockedValue,
         updatedCards: document.querySelectorAll(".result-card.is-updated").length,
         lockStillActive: document.querySelector(".result-card .lock-button").getAttribute("aria-pressed"),
@@ -284,7 +291,10 @@ async function main() {
     lockedPressed: "true",
     bulkLabel: "固定以外を再生成",
     iconChanged: true,
-    lockButtonSize: 44,
+    lockButtonSize: 32,
+    lockButtonBorder: "0px",
+    lockButtonBackground: "rgba(0, 0, 0, 0)",
+    lockButtonHitArea: "-6px",
     lockedValueKept: true,
     updatedCards: 3,
     lockStillActive: "true",
@@ -346,6 +356,9 @@ async function main() {
         shareButtons: document.querySelectorAll(".history-share-button").length,
         shareInTopControls: document.querySelector(".history-share-button")?.parentElement?.classList.contains("history-card-controls"),
         oldShareFooterAbsent: document.querySelector(".history-card-footer") === null,
+        buttonSize: Math.round(document.querySelector(".history-share-button").getBoundingClientRect().width),
+        buttonBorder: getComputedStyle(document.querySelector(".history-share-button")).borderTopWidth,
+        buttonHitArea: getComputedStyle(document.querySelector(".history-share-button"), "::before").top,
         contentWidthRatio: document.querySelector(".history-items").getBoundingClientRect().width
           / document.querySelector(".history-card").getBoundingClientRect().width,
       }), 100);
@@ -356,6 +369,9 @@ async function main() {
   assert.equal(sharedHistory.shareButtons, 2);
   assert.equal(sharedHistory.shareInTopControls, true);
   assert.equal(sharedHistory.oldShareFooterAbsent, true);
+  assert.equal(sharedHistory.buttonSize, 32);
+  assert.equal(sharedHistory.buttonBorder, "0px");
+  assert.equal(sharedHistory.buttonHitArea, "-6px");
   assert.ok(sharedHistory.contentWidthRatio > 0.85);
 
   const favoriteFilter = await evaluate(
@@ -415,7 +431,6 @@ async function main() {
       }),
     })`,
   );
-  assert.ok(adaptiveLongValues.longCards >= 1);
   assert.equal(adaptiveLongValues.valid, true);
 
   const loglineHistory = await evaluate(

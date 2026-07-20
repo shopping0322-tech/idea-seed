@@ -318,20 +318,30 @@ h2 { margin-bottom: 0; font-size: 1.65rem; letter-spacing: -0.04em; }
   margin: 0 0 14px;
 }
 
-.result-card-controls { display: flex; flex: 0 0 auto; gap: 6px; }
+.result-card-controls { display: flex; flex: 0 0 auto; gap: 12px; }
 
 .result-control-button {
+  position: relative;
   display: grid;
-  width: 44px;
-  height: 44px;
+  width: 32px;
+  height: 32px;
   padding: 0;
   place-items: center;
-  border: 1px solid var(--line);
-  border-radius: 10px;
+  border: 0;
+  border-radius: 50%;
   color: var(--muted);
-  background: rgba(255, 255, 255, 0.025);
+  background: transparent;
   cursor: pointer;
-  transition: color 160ms ease, border-color 160ms ease, background 160ms ease, transform 160ms var(--ease-out), opacity 160ms ease;
+  transition: color 160ms ease, background 160ms ease, transform 160ms var(--ease-out), opacity 160ms ease;
+}
+
+.result-control-button::before,
+.history-delete-button::before,
+.history-favorite-button::before,
+.history-share-button::before {
+  position: absolute;
+  inset: -6px;
+  content: "";
 }
 
 .result-control-button svg,
@@ -346,16 +356,13 @@ h2 { margin-bottom: 0; font-size: 1.65rem; letter-spacing: -0.04em; }
 }
 
 .result-control-button.is-active {
-  border-color: rgba(129, 216, 208, 0.5);
-  color: var(--accent-ink);
-  background: var(--accent);
+  color: var(--accent);
+  background: transparent;
 }
 
-.result-card.is-locked .lock-button {
-  box-shadow: 0 0 18px rgba(129, 216, 208, 0.16);
-}
+.result-card.is-locked .lock-button svg { filter: drop-shadow(0 0 6px rgba(129, 216, 208, 0.34)); }
 
-.result-control-button:active { transform: scale(0.9); }
+.result-control-button:active { background: rgba(129, 216, 208, 0.08); transform: scale(0.9); }
 .result-control-button:disabled { cursor: wait; opacity: 0.42; }
 .reroll-button:active svg { transform: rotate(90deg); }
 
@@ -530,7 +537,7 @@ h2 { margin-bottom: 0; font-size: 1.65rem; letter-spacing: -0.04em; }
 
 .history-card:active { transform: scale(0.992); }
 
-.history-time { margin: 0 0 14px; padding-right: 108px; color: var(--muted); font-size: 0.72rem; }
+.history-time { margin: 0 0 14px; padding-right: 128px; color: var(--muted); font-size: 0.72rem; }
 
 .history-items { display: grid; gap: 9px; margin: 0; }
 .history-row { display: grid; grid-template-columns: minmax(72px, 0.32fr) 1fr; gap: 12px; }
@@ -543,12 +550,13 @@ body[data-generator="logline"] .history-row { grid-template-columns: minmax(92px
   top: 10px;
   right: 10px;
   display: flex;
-  gap: 2px;
+  gap: 12px;
 }
 
 .history-delete-button,
 .history-favorite-button,
 .history-share-button {
+  position: relative;
   display: grid;
   width: 32px;
   height: 32px;
