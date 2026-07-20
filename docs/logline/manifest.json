@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "dataVersion": "2026.07.20.2",
+  "dataVersion": "2026.07.20.3",
   "categories": [
     {
       "id": "protagonists",
       "label": "主人公",
       "order": 1,
-      "version": 3,
+      "version": 4,
       "files": [
         {
           "path": "protagonists.json",
@@ -22,6 +22,11 @@
           "path": "protagonists_expansion.json",
           "sha256": "a4e49d7cb205c424bfd6ab75d84e932300a31de64f0d76b2c251cedfb96e69b7",
           "count": 100
+        },
+        {
+          "path": "protagonists_volume.json",
+          "sha256": "cbe101f588f2b5e58aa08c80bea1fd95d6476eedd2657b4b85ddf60f40e3ecb6",
+          "count": 1000
         }
       ]
     },
@@ -29,7 +34,7 @@
       "id": "desires",
       "label": "欲望",
       "order": 2,
-      "version": 3,
+      "version": 4,
       "files": [
         {
           "path": "desires.json",
@@ -45,6 +50,11 @@
           "path": "desires_expansion.json",
           "sha256": "c7fe24ee44919f2426e206c7b9dd40d1faabc39897db8741fbae0b0ba4963fd3",
           "count": 100
+        },
+        {
+          "path": "desires_volume.json",
+          "sha256": "26b2a74c9eea1b00313c722e91428967d27a302da360934c390b5187f0b3ae6c",
+          "count": 600
         }
       ]
     },
@@ -52,7 +62,7 @@
       "id": "daily_triggers",
       "label": "日常の入口",
       "order": 3,
-      "version": 3,
+      "version": 4,
       "files": [
         {
           "path": "daily_triggers.json",
@@ -68,6 +78,11 @@
           "path": "daily_triggers_expansion.json",
           "sha256": "80b5eb53c620d52c33a87d59d8b5154a015bd2e62df1004a09625a8f93f9c1b2",
           "count": 100
+        },
+        {
+          "path": "daily_triggers_volume.json",
+          "sha256": "8bdae66b9881c46f11ff61d2c74f5b3790b80701791dec9f3f8b1f9ea114d1a6",
+          "count": 1000
         }
       ]
     },
@@ -75,7 +90,7 @@
       "id": "phenomena",
       "label": "異常現象・世界ルール",
       "order": 4,
-      "version": 3,
+      "version": 4,
       "files": [
         {
           "path": "phenomena.json",
@@ -91,6 +106,11 @@
           "path": "phenomena_horror.json",
           "sha256": "30142ae0e16e54372ea636de873da29a2c3671c8f2b6c52cecc4fb603bbc11d4",
           "count": 211
+        },
+        {
+          "path": "phenomena_volume.json",
+          "sha256": "7b59f1807e1b1064af99358a4bfe40d7397692aafcd1939eb4c2c20f358855dc",
+          "count": 689
         }
       ]
     },
@@ -98,7 +118,7 @@
       "id": "settings",
       "label": "舞台",
       "order": 5,
-      "version": 3,
+      "version": 4,
       "files": [
         {
           "path": "settings.json",
@@ -114,6 +134,11 @@
           "path": "settings_expansion.json",
           "sha256": "a1025f2a50dc6e26eb4f1ed3e3d15e6f1b47a15af5d2b3f31f6ce658d2170102",
           "count": 100
+        },
+        {
+          "path": "settings_volume.json",
+          "sha256": "e509c52865cb93b56bd0c53b1b2991bb75e3ad5a799a1a5403baadd9e566833b",
+          "count": 500
         }
       ]
     },
