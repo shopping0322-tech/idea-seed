@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "dataVersion": "2026.07.19.2",
+  "dataVersion": "2026.07.20.1",
   "categories": [
     {
       "id": "protagonists",
@@ -60,7 +60,7 @@
       "id": "phenomena",
       "label": "異常現象・世界ルール",
       "order": 4,
-      "version": 2,
+      "version": 3,
       "files": [
         {
           "path": "phenomena.json",
@@ -71,6 +71,11 @@
           "path": "phenomena_extra.json",
           "sha256": "7f0e604058ae111ee156fde38e8313d30018381ebb9ec808e17b77c976874a5e",
           "count": 60
+        },
+        {
+          "path": "phenomena_horror.json",
+          "sha256": "30142ae0e16e54372ea636de873da29a2c3671c8f2b6c52cecc4fb603bbc11d4",
+          "count": 211
         }
       ]
     },
