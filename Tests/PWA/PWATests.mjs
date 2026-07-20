@@ -24,7 +24,7 @@ test("logline manifest contains six curated categories", async () => {
   ]);
   assert.deepEqual(
     manifest.categories.map((category) => category.files.reduce((total, file) => total + file.count, 0)),
-    [200, 200, 200, 311, 200, 100],
+    [619, 300, 300, 311, 632, 100],
   );
 });
 
