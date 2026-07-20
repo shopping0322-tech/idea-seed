@@ -113,6 +113,7 @@
           </select>
           <button id="clear-history-button" class="ghost-button danger-button" type="button" disabled>全削除</button>
         </div>
+        <p id="history-message" class="history-message" role="status"></p>
         <div id="history-list" class="history-list">
           <div class="empty-state compact"><p>生成履歴はまだありません。</p></div>
         </div>
@@ -124,9 +125,7 @@
         <span class="generate-label">生成</span>
         <span class="generate-symbol" aria-hidden="true">✦</span>
       </button>
-      <button id="result-favorite-button" class="footer-favorite-button" type="button" aria-pressed="false" aria-label="お気に入りに追加" disabled>
-        <span class="favorite-symbol" aria-hidden="true">☆</span>
-      </button>
+      <button id="result-favorite-button" type="button" hidden disabled aria-hidden="true"></button>
     </footer>
   </div>
 

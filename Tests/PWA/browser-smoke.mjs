@@ -146,6 +146,9 @@ async function generate(client) {
         historyCount: document.querySelector("#history-count")?.textContent?.trim(),
         labels: [...document.querySelectorAll(".result-card .category-label")].map((element) => element.textContent.trim()),
         cardAnimation: getComputedStyle(document.querySelector(".result-card")).animationName,
+        controls: document.querySelectorAll(".result-control-button").length,
+        cardsFit: [...document.querySelectorAll(".result-card")]
+          .every((card) => card.scrollWidth <= card.clientWidth && card.scrollHeight <= card.clientHeight),
       }), 500);
     })`,
   );
@@ -234,19 +237,79 @@ async function main() {
   assert.equal(firstScene.historyCount, "1件");
   assert.deepEqual(firstScene.labels, ["いつ", "どこで", "誰が", "何をした"]);
   assert.equal(firstScene.cardAnimation, "card-reveal");
+  assert.equal(firstScene.controls, 8);
+  assert.equal(firstScene.cardsFit, true);
+  assert.equal(await evaluate(client, `document.querySelector("#result-favorite-button")?.hidden === true`), true);
   const favoriteResult = await evaluate(
     client,
     `new Promise((resolve) => {
-      document.querySelector("#result-favorite-button").click();
+      document.querySelector('[data-view="history"]').click();
+      document.querySelector(".history-favorite-button").click();
       setTimeout(() => resolve({
-        pressed: document.querySelector("#result-favorite-button").getAttribute("aria-pressed"),
-        symbol: document.querySelector("#result-favorite-button .favorite-symbol")?.textContent,
+        pressed: document.querySelector(".history-favorite-button").getAttribute("aria-pressed"),
+        symbol: document.querySelector(".history-favorite-button")?.textContent,
         favoriteCount: document.querySelector("#favorite-count")?.textContent?.trim(),
       }), 200);
     })`,
   );
   assert.deepEqual(favoriteResult, { pressed: "true", symbol: "★", favoriteCount: "1" });
+  await evaluate(client, `document.querySelector('[data-view="generator"]').click()`);
   await generate(client);
+
+  const lockedRegeneration = await evaluate(
+    client,
+    `new Promise((resolve) => {
+      const firstCard = document.querySelector(".result-card");
+      const lockedValue = firstCard.querySelector(".result-value").textContent;
+      firstCard.querySelector(".lock-button").click();
+      const lockedPressed = firstCard.querySelector(".lock-button").getAttribute("aria-pressed");
+      const bulkLabel = document.querySelector(".generate-label").textContent.trim();
+      document.querySelector("#generate-button").click();
+      setTimeout(() => resolve({
+        count: document.querySelector("#history-count")?.textContent?.trim(),
+        lockedPressed,
+        bulkLabel,
+        lockedValueKept: document.querySelector(".result-card .result-value").textContent === lockedValue,
+        updatedCards: document.querySelectorAll(".result-card.is-updated").length,
+        lockStillActive: document.querySelector(".result-card .lock-button").getAttribute("aria-pressed"),
+      }), 500);
+    })`,
+  );
+  assert.deepEqual(lockedRegeneration, {
+    count: "2件",
+    lockedPressed: "true",
+    bulkLabel: "固定以外を再生成",
+    lockedValueKept: true,
+    updatedCards: 3,
+    lockStillActive: "true",
+  });
+
+  const individualRegeneration = await evaluate(
+    client,
+    `new Promise((resolve) => {
+      document.querySelector(".result-card .reroll-button").click();
+      setTimeout(() => resolve({
+        count: document.querySelector("#history-count")?.textContent?.trim(),
+        updatedCards: document.querySelectorAll(".result-card.is-updated").length,
+        lockStillActive: document.querySelector(".result-card .lock-button").getAttribute("aria-pressed"),
+      }), 500);
+    })`,
+  );
+  assert.deepEqual(individualRegeneration, { count: "2件", updatedCards: 1, lockStillActive: "true" });
+  const allLocked = await evaluate(
+    client,
+    `(() => {
+      [...document.querySelectorAll(".result-card .lock-button")].slice(1).forEach((button) => button.click());
+      const state = {
+        label: document.querySelector(".generate-label").textContent.trim(),
+        disabled: document.querySelector("#generate-button").disabled,
+        activeLocks: document.querySelectorAll(".lock-button.is-active").length,
+      };
+      document.querySelectorAll(".lock-button.is-active").forEach((button) => button.click());
+      return state;
+    })()`,
+  );
+  assert.deepEqual(allLocked, { label: "すべて固定中", disabled: true, activeLocks: 4 });
 
   const sceneHistory = await evaluate(
     client,
@@ -262,6 +325,25 @@ async function main() {
     })`,
   );
   assert.deepEqual(sceneHistory, { count: "2件", savedSort: "oldest", footerHidden: true });
+
+  const sharedHistory = await evaluate(
+    client,
+    `new Promise((resolve) => {
+      Object.defineProperty(navigator, "share", {
+        configurable: true,
+        value: async (data) => { window.__ideaSeedSharedData = data; },
+      });
+      document.querySelector(".history-share-button").click();
+      setTimeout(() => resolve({
+        title: window.__ideaSeedSharedData?.title,
+        text: window.__ideaSeedSharedData?.text,
+        shareButtons: document.querySelectorAll(".history-share-button").length,
+      }), 100);
+    })`,
+  );
+  assert.equal(sharedHistory.title, "発想の種｜シーン生成");
+  assert.match(sharedHistory.text, /^発想の種｜シーン生成\n\nいつ：.+\nどこで：.+\n誰が：.+\n何をした：.+$/s);
+  assert.equal(sharedHistory.shareButtons, 2);
 
   const favoriteFilter = await evaluate(
     client,
@@ -307,6 +389,8 @@ async function main() {
   assert.equal(logline.cards, 6);
   assert.equal(logline.historyCount, "1件");
   assert.deepEqual(logline.labels, ["主人公", "欲望", "日常の入口", "異常現象・世界ルール", "舞台", "スケール"]);
+  assert.equal(logline.controls, 12);
+  assert.equal(logline.cardsFit, true);
 
   const loglineHistory = await evaluate(
     client,
@@ -378,7 +462,6 @@ async function main() {
   await generate(client);
 
   const desktopButtonWidths = [];
-  const desktopFooterContentWidths = [];
   const desktopResultColumns = [];
   for (const width of [900, 1440]) {
     await client.send("Emulation.setDeviceMetricsOverride", {
@@ -391,18 +474,12 @@ async function main() {
       client,
       `Math.round(document.querySelector("#generate-button").getBoundingClientRect().width)`,
     ));
-    desktopFooterContentWidths.push(await evaluate(
-      client,
-      `Math.round(document.querySelector("#generate-button").getBoundingClientRect().width
-        + document.querySelector("#result-favorite-button").getBoundingClientRect().width + 10)`,
-    ));
     desktopResultColumns.push(await evaluate(
       client,
       `new Set([...document.querySelectorAll(".result-card")].map((card) => Math.round(card.getBoundingClientRect().left))).size`,
     ));
   }
-  assert.deepEqual(desktopButtonWidths, [612, 612]);
-  assert.deepEqual(desktopFooterContentWidths, [680, 680]);
+  assert.deepEqual(desktopButtonWidths, [680, 680]);
   assert.deepEqual(desktopResultColumns, [1, 1]);
 
   client.close();

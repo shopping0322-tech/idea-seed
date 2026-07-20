@@ -33,7 +33,6 @@ const elements = {
   generateLabel: document.querySelector(".generate-label"),
   generatorMessage: document.querySelector("#generator-message"),
   actionFooter: document.querySelector(".action-footer"),
-  resultFavoriteButton: document.querySelector("#result-favorite-button"),
   resultList: document.querySelector("#result-list"),
   historyList: document.querySelector("#history-list"),
   historyCount: document.querySelector("#history-count"),
@@ -44,6 +43,7 @@ const elements = {
   historyTotalFilterCount: document.querySelector("#history-total-filter-count"),
   favoriteCount: document.querySelector("#favorite-count"),
   clearHistoryButton: document.querySelector("#clear-history-button"),
+  historyMessage: document.querySelector("#history-message"),
   confirmDialog: document.querySelector("#confirm-dialog"),
   confirmDialogTitle: document.querySelector("#confirm-dialog-title"),
   confirmDialogMessage: document.querySelector("#confirm-dialog-message"),
@@ -62,6 +62,7 @@ let transitioning = false;
 let loadingSequence = 0;
 let historyRecords = [];
 let currentResultRecord = null;
+let lockedCategoryIds = new Set();
 let historyFilter = "all";
 let pendingDeleteAction = null;
 
@@ -80,7 +81,7 @@ function bindEvents() {
     if (!generating) returnToMenu();
   });
   elements.generateButton.addEventListener("click", generate);
-  elements.resultFavoriteButton.addEventListener("click", () => toggleFavorite(currentResultRecord?.id));
+  elements.resultList.addEventListener("click", handleResultClick);
   elements.historySearch.addEventListener("input", renderHistoryList);
   elements.historySort.addEventListener("change", changeHistorySort);
   elements.clearHistoryButton.addEventListener("click", clearAllHistory);
@@ -101,9 +102,11 @@ async function selectGenerator(generatorId, selectedCard) {
   document.body.dataset.generator = generator.id;
   categories = [];
   historyRecords = [];
+  lockedCategoryIds = new Set();
   historyFilter = "all";
   updateHistoryFilterButtons();
   elements.historySearch.value = "";
+  elements.historyMessage.textContent = "";
   restoreHistorySort();
   resetResult();
   setMessage("データを読み込んでいます…");
@@ -123,7 +126,7 @@ async function selectGenerator(generatorId, selectedCard) {
     const { dataset } = result;
     if (sequence !== loadingSequence || currentGenerator?.id !== generator.id) return;
     categories = dataset.categories;
-    elements.generateButton.disabled = false;
+    updateGenerateButtonState();
     if (dataset.source === "updated") {
       setMessage("最新データを保存しました。次回からオフラインでも利用できます。");
     } else if (dataset.source === "offline") {
@@ -238,43 +241,90 @@ function prefersReducedMotion() {
 
 async function generate() {
   if (generating || !currentGenerator || categories.length === 0) return;
+  const isPartialRegeneration = currentResultRecord !== null && lockedCategoryIds.size > 0;
+  const targetCategories = isPartialRegeneration
+    ? categories.filter((category) => !lockedCategoryIds.has(category.categoryId ?? category.id))
+    : categories;
+  if (targetCategories.length === 0) return;
   generating = true;
-  elements.generateButton.disabled = true;
+  updateGenerateButtonState();
+  setResultControlsDisabled(true);
   elements.generateButton.classList.add("is-generating");
   setMessage("");
   try {
-    const items = await Promise.all(categories.map(async (category) => {
-      const index = secureRandomInteger(category.count);
-      return {
-        categoryId: category.categoryId ?? category.id,
-        categoryLabel: category.label,
-        displayOrder: category.order,
-        value: await getEntryAt(category, index),
-      };
-    }));
-    const record = {
-      id: crypto.randomUUID(),
-      generatorId: currentGenerator.id,
-      createdAt: Date.now(),
-      isFavorite: false,
-      items: items.sort((a, b) => a.displayOrder - b.displayOrder),
-    };
+    const drawnItems = await Promise.all(targetCategories.map(drawCategoryItem));
+    const changedIds = new Set(drawnItems.map((item) => item.categoryId));
+    const record = isPartialRegeneration
+      ? updateCurrentRecord(drawnItems)
+      : createHistoryRecord(drawnItems);
     await addHistory(record);
-    renderResult(record);
+    renderResult(record, changedIds);
     await renderHistory();
   } catch (error) {
     setMessage(error.message ?? "抽選に失敗しました。", true);
   } finally {
     generating = false;
-    elements.generateButton.disabled = categories.length === 0;
+    updateGenerateButtonState();
+    setResultControlsDisabled(false);
     elements.generateButton.classList.remove("is-generating");
   }
 }
 
+async function rerollCategory(categoryId) {
+  if (generating || !currentResultRecord) return;
+  const category = categories.find((item) => (item.categoryId ?? item.id) === categoryId);
+  if (!category) return;
+  generating = true;
+  updateGenerateButtonState();
+  setResultControlsDisabled(true);
+  setMessage("");
+  try {
+    const drawnItem = await drawCategoryItem(category);
+    const record = updateCurrentRecord([drawnItem]);
+    await addHistory(record);
+    renderResult(record, new Set([categoryId]));
+    await renderHistory();
+  } catch (error) {
+    setMessage(error.message ?? "再抽選に失敗しました。", true);
+  } finally {
+    generating = false;
+    updateGenerateButtonState();
+    setResultControlsDisabled(false);
+  }
+}
+
+async function drawCategoryItem(category) {
+  const index = secureRandomInteger(category.count);
+  return {
+    categoryId: category.categoryId ?? category.id,
+    categoryLabel: category.label,
+    displayOrder: category.order,
+    value: await getEntryAt(category, index),
+  };
+}
+
+function createHistoryRecord(items) {
+  return {
+    id: crypto.randomUUID(),
+    generatorId: currentGenerator.id,
+    createdAt: Date.now(),
+    isFavorite: false,
+    items: items.sort((a, b) => a.displayOrder - b.displayOrder),
+  };
+}
+
+function updateCurrentRecord(drawnItems) {
+  const replacements = new Map(drawnItems.map((item) => [item.categoryId, item]));
+  return {
+    ...currentResultRecord,
+    updatedAt: Date.now(),
+    items: currentResultRecord.items.map((item) => replacements.get(item.categoryId) ?? item),
+  };
+}
+
 function resetResult() {
   currentResultRecord = null;
-  elements.resultFavoriteButton.disabled = true;
-  updateFavoriteButton(elements.resultFavoriteButton, false);
+  lockedCategoryIds = new Set();
   elements.resultList.innerHTML = `
     <div class="empty-state">
       <span class="seed-mark" aria-hidden="true">✦</span>
@@ -282,23 +332,94 @@ function resetResult() {
     </div>`;
 }
 
-function renderResult(record) {
+function renderResult(record, changedCategoryIds = new Set(record.items.map((item) => item.categoryId))) {
   currentResultRecord = record;
-  elements.resultFavoriteButton.disabled = false;
-  updateFavoriteButton(elements.resultFavoriteButton, record.isFavorite === true);
   elements.resultList.replaceChildren(...record.items.map((item, index) => {
     const card = document.createElement("article");
     card.className = "result-card";
+    card.classList.toggle("is-updated", changedCategoryIds.has(item.categoryId));
+    card.classList.toggle("is-locked", lockedCategoryIds.has(item.categoryId));
+    card.dataset.categoryId = item.categoryId;
     card.style.setProperty("--reveal-index", index);
+    const header = document.createElement("div");
+    header.className = "result-card-header";
     const label = document.createElement("p");
     label.className = "category-label";
     label.textContent = item.categoryLabel;
+    const controls = document.createElement("div");
+    controls.className = "result-card-controls";
+    controls.append(createLockButton(item), createRerollButton(item));
     const value = document.createElement("p");
     value.className = "result-value";
     value.textContent = item.value;
-    card.append(label, value);
+    header.append(label, controls);
+    card.append(header, value);
     return card;
   }));
+  updateGenerateButtonState();
+}
+
+function createLockButton(item) {
+  const locked = lockedCategoryIds.has(item.categoryId);
+  const button = document.createElement("button");
+  button.className = "result-control-button lock-button";
+  button.classList.toggle("is-active", locked);
+  button.type = "button";
+  button.dataset.lockCategoryId = item.categoryId;
+  button.setAttribute("aria-pressed", String(locked));
+  button.setAttribute("aria-label", locked ? `${item.categoryLabel}の固定を解除` : `${item.categoryLabel}を固定`);
+  button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 10V7.5a4.5 4.5 0 0 1 9 0V10M6 10h12v10H6z"/></svg>';
+  return button;
+}
+
+function createRerollButton(item) {
+  const button = document.createElement("button");
+  button.className = "result-control-button reroll-button";
+  button.type = "button";
+  button.dataset.rerollCategoryId = item.categoryId;
+  button.setAttribute("aria-label", `${item.categoryLabel}だけ再生成`);
+  button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 8a7.5 7.5 0 1 0 1 7M19 4v4h-4"/></svg>';
+  return button;
+}
+
+function handleResultClick(event) {
+  const lockButton = event.target.closest("[data-lock-category-id]");
+  if (lockButton) {
+    toggleCategoryLock(lockButton.dataset.lockCategoryId);
+    return;
+  }
+  const rerollButton = event.target.closest("[data-reroll-category-id]");
+  if (rerollButton) rerollCategory(rerollButton.dataset.rerollCategoryId);
+}
+
+function toggleCategoryLock(categoryId) {
+  if (generating || !currentResultRecord) return;
+  if (lockedCategoryIds.has(categoryId)) lockedCategoryIds.delete(categoryId);
+  else lockedCategoryIds.add(categoryId);
+  const card = elements.resultList.querySelector(`[data-category-id="${CSS.escape(categoryId)}"]`);
+  const button = card?.querySelector("[data-lock-category-id]");
+  const locked = lockedCategoryIds.has(categoryId);
+  card?.classList.toggle("is-locked", locked);
+  button?.classList.toggle("is-active", locked);
+  button?.setAttribute("aria-pressed", String(locked));
+  const label = currentResultRecord.items.find((item) => item.categoryId === categoryId)?.categoryLabel ?? "カード";
+  button?.setAttribute("aria-label", locked ? `${label}の固定を解除` : `${label}を固定`);
+  updateGenerateButtonState();
+}
+
+function updateGenerateButtonState() {
+  const allLocked = currentResultRecord !== null && categories.length > 0 && lockedCategoryIds.size === categories.length;
+  elements.generateButton.disabled = generating || categories.length === 0 || allLocked;
+  if (!currentResultRecord) elements.generateLabel.textContent = currentGenerator?.generateLabel ?? "生成";
+  else if (allLocked) elements.generateLabel.textContent = "すべて固定中";
+  else if (lockedCategoryIds.size > 0) elements.generateLabel.textContent = "固定以外を再生成";
+  else elements.generateLabel.textContent = "すべて再生成";
+}
+
+function setResultControlsDisabled(disabled) {
+  elements.resultList.querySelectorAll(".result-control-button").forEach((button) => {
+    button.disabled = disabled;
+  });
 }
 
 async function renderHistory() {
@@ -369,14 +490,27 @@ function createHistoryCard(record) {
   deleteButton.setAttribute("aria-label", "この履歴を削除");
   deleteButton.textContent = "×";
   const favoriteButton = createFavoriteButton(record);
+  const shareButton = document.createElement("button");
+  shareButton.className = "history-share-button";
+  shareButton.type = "button";
+  shareButton.dataset.shareHistoryId = record.id;
+  shareButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M8 8l4-4 4 4M6 12H4v8h16v-8h-2"/></svg><span>共有</span>';
   const controls = document.createElement("div");
   controls.className = "history-card-controls";
   controls.append(favoriteButton, deleteButton);
-  card.append(time, list, controls);
+  const footer = document.createElement("div");
+  footer.className = "history-card-footer";
+  footer.append(shareButton);
+  card.append(time, list, footer, controls);
   return card;
 }
 
 function handleHistoryClick(event) {
+  const shareButton = event.target.closest("[data-share-history-id]");
+  if (shareButton) {
+    shareHistoryRecord(shareButton.dataset.shareHistoryId);
+    return;
+  }
   const favoriteButton = event.target.closest("[data-toggle-favorite-id]");
   if (favoriteButton) {
     toggleFavorite(favoriteButton.dataset.toggleFavoriteId);
@@ -396,6 +530,35 @@ function handleHistoryClick(event) {
       renderHistoryList();
     },
   });
+}
+
+async function shareHistoryRecord(historyId) {
+  const record = historyRecords.find((item) => item.id === historyId);
+  if (!record) return;
+  const generator = GENERATORS.get(record.generatorId ?? "scene") ?? GENERATORS.get("scene");
+  const title = `発想の種｜${generator.label}`;
+  const text = [
+    title,
+    "",
+    ...record.items.map((item) => `${item.categoryLabel}：${item.value}`),
+  ].join("\n");
+  elements.historyMessage.textContent = "";
+  try {
+    if (typeof navigator.share === "function") {
+      await navigator.share({ title, text });
+      return;
+    }
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      elements.historyMessage.textContent = "共有用テキストをコピーしました。";
+      return;
+    }
+    elements.historyMessage.textContent = "この端末では共有機能を利用できません。";
+  } catch (error) {
+    if (error?.name !== "AbortError") {
+      elements.historyMessage.textContent = "共有できませんでした。";
+    }
+  }
 }
 
 function clearAllHistory() {
@@ -529,7 +692,6 @@ async function toggleFavorite(historyId) {
     if (!historyRecords.some((item) => item.id === historyId)) historyRecords.push(updated);
     if (currentResultRecord?.id === historyId) {
       currentResultRecord = updated;
-      updateFavoriteButton(elements.resultFavoriteButton, updated.isFavorite);
     }
     renderHistoryList();
   } catch (error) {
@@ -545,6 +707,7 @@ function showView(name) {
     categories = [];
     historyRecords = [];
     currentResultRecord = null;
+    lockedCategoryIds = new Set();
     elements.generateButton.disabled = true;
   }
   elements.tabs.forEach((tab) => {
