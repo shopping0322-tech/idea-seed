@@ -339,6 +339,9 @@ function renderResult(record, changedCategoryIds = new Set(record.items.map((ite
     card.className = "result-card";
     card.classList.toggle("is-updated", changedCategoryIds.has(item.categoryId));
     card.classList.toggle("is-locked", lockedCategoryIds.has(item.categoryId));
+    const valueLength = Array.from(item.value).length;
+    card.classList.toggle("has-long-value", valueLength > 18);
+    card.classList.toggle("has-very-long-value", valueLength > 32);
     card.dataset.categoryId = item.categoryId;
     card.style.setProperty("--reveal-index", index);
     const header = document.createElement("div");
@@ -368,8 +371,15 @@ function createLockButton(item) {
   button.dataset.lockCategoryId = item.categoryId;
   button.setAttribute("aria-pressed", String(locked));
   button.setAttribute("aria-label", locked ? `${item.categoryLabel}の固定を解除` : `${item.categoryLabel}を固定`);
-  button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 10V7.5a4.5 4.5 0 0 1 9 0V10M6 10h12v10H6z"/></svg>';
+  button.innerHTML = lockIconMarkup(locked);
   return button;
+}
+
+function lockIconMarkup(locked) {
+  const shackle = locked
+    ? '<path d="M7.5 10V7.5a4.5 4.5 0 0 1 9 0V10"/>'
+    : '<path d="M9 10V7.5a4.5 4.5 0 0 1 8.2-2.6"/>';
+  return `<svg viewBox="0 0 24 24" aria-hidden="true">${shackle}<path d="M6 10h12v10H6z"/></svg>`;
 }
 
 function createRerollButton(item) {
@@ -402,8 +412,16 @@ function toggleCategoryLock(categoryId) {
   card?.classList.toggle("is-locked", locked);
   button?.classList.toggle("is-active", locked);
   button?.setAttribute("aria-pressed", String(locked));
+  if (button) button.innerHTML = lockIconMarkup(locked);
   const label = currentResultRecord.items.find((item) => item.categoryId === categoryId)?.categoryLabel ?? "カード";
   button?.setAttribute("aria-label", locked ? `${label}の固定を解除` : `${label}を固定`);
+  if (button && !prefersReducedMotion()) {
+    button.animate([
+      { transform: "scale(0.78) rotate(-5deg)" },
+      { transform: "scale(1.08) rotate(3deg)", offset: 0.65 },
+      { transform: "scale(1) rotate(0)" },
+    ], { duration: 240, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)" });
+  }
   updateGenerateButtonState();
 }
 
@@ -494,14 +512,12 @@ function createHistoryCard(record) {
   shareButton.className = "history-share-button";
   shareButton.type = "button";
   shareButton.dataset.shareHistoryId = record.id;
-  shareButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M8 8l4-4 4 4M6 12H4v8h16v-8h-2"/></svg><span>共有</span>';
+  shareButton.setAttribute("aria-label", "この履歴を共有");
+  shareButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M8 8l4-4 4 4M6 12H4v8h16v-8h-2"/></svg>';
   const controls = document.createElement("div");
   controls.className = "history-card-controls";
-  controls.append(favoriteButton, deleteButton);
-  const footer = document.createElement("div");
-  footer.className = "history-card-footer";
-  footer.append(shareButton);
-  card.append(time, list, footer, controls);
+  controls.append(shareButton, favoriteButton, deleteButton);
+  card.append(time, list, controls);
   return card;
 }
 

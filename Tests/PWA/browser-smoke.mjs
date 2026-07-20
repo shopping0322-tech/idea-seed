@@ -261,6 +261,8 @@ async function main() {
     `new Promise((resolve) => {
       const firstCard = document.querySelector(".result-card");
       const lockedValue = firstCard.querySelector(".result-value").textContent;
+      const unlockedIconPath = firstCard.querySelector(".lock-button path")?.getAttribute("d");
+      const lockButtonSize = Math.round(firstCard.querySelector(".lock-button").getBoundingClientRect().width);
       firstCard.querySelector(".lock-button").click();
       const lockedPressed = firstCard.querySelector(".lock-button").getAttribute("aria-pressed");
       const bulkLabel = document.querySelector(".generate-label").textContent.trim();
@@ -269,6 +271,8 @@ async function main() {
         count: document.querySelector("#history-count")?.textContent?.trim(),
         lockedPressed,
         bulkLabel,
+        iconChanged: firstCard.querySelector(".lock-button path")?.getAttribute("d") !== unlockedIconPath,
+        lockButtonSize,
         lockedValueKept: document.querySelector(".result-card .result-value").textContent === lockedValue,
         updatedCards: document.querySelectorAll(".result-card.is-updated").length,
         lockStillActive: document.querySelector(".result-card .lock-button").getAttribute("aria-pressed"),
@@ -279,6 +283,8 @@ async function main() {
     count: "2件",
     lockedPressed: "true",
     bulkLabel: "固定以外を再生成",
+    iconChanged: true,
+    lockButtonSize: 44,
     lockedValueKept: true,
     updatedCards: 3,
     lockStillActive: "true",
@@ -338,12 +344,19 @@ async function main() {
         title: window.__ideaSeedSharedData?.title,
         text: window.__ideaSeedSharedData?.text,
         shareButtons: document.querySelectorAll(".history-share-button").length,
+        shareInTopControls: document.querySelector(".history-share-button")?.parentElement?.classList.contains("history-card-controls"),
+        oldShareFooterAbsent: document.querySelector(".history-card-footer") === null,
+        contentWidthRatio: document.querySelector(".history-items").getBoundingClientRect().width
+          / document.querySelector(".history-card").getBoundingClientRect().width,
       }), 100);
     })`,
   );
   assert.equal(sharedHistory.title, "発想の種｜シーン生成");
   assert.match(sharedHistory.text, /^発想の種｜シーン生成\n\nいつ：.+\nどこで：.+\n誰が：.+\n何をした：.+$/s);
   assert.equal(sharedHistory.shareButtons, 2);
+  assert.equal(sharedHistory.shareInTopControls, true);
+  assert.equal(sharedHistory.oldShareFooterAbsent, true);
+  assert.ok(sharedHistory.contentWidthRatio > 0.85);
 
   const favoriteFilter = await evaluate(
     client,
@@ -391,6 +404,19 @@ async function main() {
   assert.deepEqual(logline.labels, ["主人公", "欲望", "日常の入口", "異常現象・世界ルール", "舞台", "スケール"]);
   assert.equal(logline.controls, 12);
   assert.equal(logline.cardsFit, true);
+  const adaptiveLongValues = await evaluate(
+    client,
+    `({
+      longCards: document.querySelectorAll(".result-card.has-long-value").length,
+      valid: [...document.querySelectorAll(".result-card")].every((card) => {
+        const length = Array.from(card.querySelector(".result-value").textContent).length;
+        return card.classList.contains("has-long-value") === (length > 18)
+          && card.classList.contains("has-very-long-value") === (length > 32);
+      }),
+    })`,
+  );
+  assert.ok(adaptiveLongValues.longCards >= 1);
+  assert.equal(adaptiveLongValues.valid, true);
 
   const loglineHistory = await evaluate(
     client,

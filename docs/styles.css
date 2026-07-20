@@ -271,7 +271,7 @@ h2 { margin-bottom: 0; font-size: 1.65rem; letter-spacing: -0.04em; }
   --card-accent: var(--accent);
   position: relative;
   overflow: hidden;
-  padding: 18px 20px 20px;
+  padding: 22px 16px;
   box-shadow: 0 12px 34px rgba(0, 0, 0, 0.12);
   transition: border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
 }
@@ -315,15 +315,15 @@ h2 { margin-bottom: 0; font-size: 1.65rem; letter-spacing: -0.04em; }
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin: 0 0 10px;
+  margin: 0 0 14px;
 }
 
-.result-card-controls { display: flex; flex: 0 0 auto; gap: 5px; }
+.result-card-controls { display: flex; flex: 0 0 auto; gap: 6px; }
 
 .result-control-button {
   display: grid;
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   place-items: center;
   border: 1px solid var(--line);
@@ -351,6 +351,10 @@ h2 { margin-bottom: 0; font-size: 1.65rem; letter-spacing: -0.04em; }
   background: var(--accent);
 }
 
+.result-card.is-locked .lock-button {
+  box-shadow: 0 0 18px rgba(129, 216, 208, 0.16);
+}
+
 .result-control-button:active { transform: scale(0.9); }
 .result-control-button:disabled { cursor: wait; opacity: 0.42; }
 .reroll-button:active svg { transform: rotate(90deg); }
@@ -359,13 +363,19 @@ h2 { margin-bottom: 0; font-size: 1.65rem; letter-spacing: -0.04em; }
   margin: 0;
   font-size: clamp(1.35rem, 6vw, 2rem);
   font-weight: 700;
-  line-height: 1.4;
+  line-height: 1.48;
   letter-spacing: -0.035em;
   overflow-wrap: anywhere;
 }
 
-body[data-generator="logline"] .result-card:nth-child(4) .result-value {
-  font-size: clamp(1.1rem, 5vw, 1.55rem);
+.result-card.has-long-value .result-value {
+  font-size: clamp(1.15rem, 5vw, 1.55rem);
+  line-height: 1.55;
+}
+
+.result-card.has-very-long-value .result-value {
+  font-size: clamp(1.05rem, 4.6vw, 1.35rem);
+  line-height: 1.6;
 }
 
 .empty-state {
@@ -513,14 +523,14 @@ body[data-generator="logline"] .result-card:nth-child(4) .result-value {
 
 .history-card {
   position: relative;
-  padding: 18px 82px 18px 18px;
+  padding: 18px;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.1);
   transition: border-color 180ms ease, transform 180ms ease;
 }
 
 .history-card:active { transform: scale(0.992); }
 
-.history-time { margin: 0 0 14px; color: var(--muted); font-size: 0.72rem; }
+.history-time { margin: 0 0 14px; padding-right: 108px; color: var(--muted); font-size: 0.72rem; }
 
 .history-items { display: grid; gap: 9px; margin: 0; }
 .history-row { display: grid; grid-template-columns: minmax(72px, 0.32fr) 1fr; gap: 12px; }
@@ -537,7 +547,8 @@ body[data-generator="logline"] .history-row { grid-template-columns: minmax(92px
 }
 
 .history-delete-button,
-.history-favorite-button {
+.history-favorite-button,
+.history-share-button {
   display: grid;
   width: 32px;
   height: 32px;
@@ -565,35 +576,14 @@ body[data-generator="logline"] .history-row { grid-template-columns: minmax(92px
 .history-favorite-button:active { background: rgba(129, 216, 208, 0.08); transform: scale(0.88); }
 .history-favorite-button.is-favorite { animation: favorite-pop 260ms var(--ease-out); }
 
-.history-card-footer {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 16px;
-  padding-top: 12px;
-  border-top: 1px solid var(--line);
-}
-
 .history-share-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  min-height: 36px;
-  padding: 0 11px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
   color: var(--muted);
-  background: rgba(255, 255, 255, 0.025);
-  font-size: 0.74rem;
-  font-weight: 800;
-  cursor: pointer;
-  transition: color 160ms ease, border-color 160ms ease, background 160ms ease, transform 160ms var(--ease-out);
 }
 
 .history-share-button:active {
-  border-color: rgba(129, 216, 208, 0.38);
   color: var(--accent);
-  background: rgba(129, 216, 208, 0.07);
-  transform: scale(0.95);
+  background: rgba(129, 216, 208, 0.08);
+  transform: scale(0.9);
 }
 
 .confirm-dialog {
@@ -760,7 +750,8 @@ body[data-generator="logline"] .history-row { grid-template-columns: minmax(92px
   .result-card-header { display: grid; justify-content: stretch; gap: 12px; margin: 0; }
   .result-card-controls { justify-content: flex-start; }
   .result-card .result-value { font-size: clamp(1.55rem, 2.5vw, 2rem); }
-  body[data-generator="logline"] .result-card:nth-child(4) .result-value { font-size: clamp(1.25rem, 2vw, 1.55rem); }
+  .result-card.has-long-value .result-value { font-size: clamp(1.3rem, 2.2vw, 1.65rem); }
+  .result-card.has-very-long-value .result-value { font-size: clamp(1.15rem, 1.9vw, 1.45rem); }
 }
 
 @media (max-width: 520px) {
