@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "dataVersion": "2026.07.20.1",
+  "dataVersion": "2026.07.20.2",
   "categories": [
     {
       "id": "protagonists",
       "label": "主人公",
       "order": 1,
-      "version": 2,
+      "version": 3,
       "files": [
         {
           "path": "protagonists.json",
@@ -17,6 +17,11 @@
           "path": "protagonists_extra.json",
           "sha256": "725bfd787db81e2af4539f54743e58d16467cf08e2d3eb5a2c9c2e6a8e16b40c",
           "count": 60
+        },
+        {
+          "path": "protagonists_expansion.json",
+          "sha256": "a4e49d7cb205c424bfd6ab75d84e932300a31de64f0d76b2c251cedfb96e69b7",
+          "count": 100
         }
       ]
     },
@@ -24,7 +29,7 @@
       "id": "desires",
       "label": "欲望",
       "order": 2,
-      "version": 2,
+      "version": 3,
       "files": [
         {
           "path": "desires.json",
@@ -35,6 +40,11 @@
           "path": "desires_extra.json",
           "sha256": "0c91e971a09b65ca0a351fd1cb17d89e6f5c5129ddcbc89988aad9078eed8606",
           "count": 60
+        },
+        {
+          "path": "desires_expansion.json",
+          "sha256": "c7fe24ee44919f2426e206c7b9dd40d1faabc39897db8741fbae0b0ba4963fd3",
+          "count": 100
         }
       ]
     },
@@ -42,7 +52,7 @@
       "id": "daily_triggers",
       "label": "日常の入口",
       "order": 3,
-      "version": 2,
+      "version": 3,
       "files": [
         {
           "path": "daily_triggers.json",
@@ -53,6 +63,11 @@
           "path": "daily_triggers_extra.json",
           "sha256": "76e55e067015526f34597b501f9341f036444bc2874ace0295dfbca3937dd4b4",
           "count": 60
+        },
+        {
+          "path": "daily_triggers_expansion.json",
+          "sha256": "80b5eb53c620d52c33a87d59d8b5154a015bd2e62df1004a09625a8f93f9c1b2",
+          "count": 100
         }
       ]
     },
@@ -83,7 +98,7 @@
       "id": "settings",
       "label": "舞台",
       "order": 5,
-      "version": 2,
+      "version": 3,
       "files": [
         {
           "path": "settings.json",
@@ -94,6 +109,11 @@
           "path": "settings_extra.json",
           "sha256": "684ce8154f80fe87815b6bb0c320f79ff362ac9ca1a677eee37dbdd7b0839e6c",
           "count": 60
+        },
+        {
+          "path": "settings_expansion.json",
+          "sha256": "a1025f2a50dc6e26eb4f1ed3e3d15e6f1b47a15af5d2b3f31f6ce658d2170102",
+          "count": 100
         }
       ]
     },
